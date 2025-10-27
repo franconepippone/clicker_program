@@ -12,18 +12,12 @@ if TYPE_CHECKING:
 
 ##### Utility functions
 
-def _add_to_history(shared: Dict, position: Tuple[int, int]):
-    shared["mov_history"].append(position)
-    shared["has_moved"] = True
+def _add_to_history(shared: Dict):
+    shared["mov_history"].append(gui.position())
 
 def _get_from_hystory(shared: Dict) -> Tuple[int, int] | None:
-    if shared["has_moved"]:
-        shared["has_moved"] = False
-        _get_from_hystory(shared)   # deletes latest element
-
     if len(shared["mov_history"]) > 0:
-        position: Tuple[int, int] = shared["mov_history"].pop(-1)
-        return position
+        return shared["mov_history"].pop(-1)
 
 def _set_new_offset(shared: Dict, pos: Tuple[int, int]):
     shared["offset"] = pos
@@ -50,8 +44,7 @@ class SetupAndStart(Instruction):
     """ Sets up all the shared memory properties to work for all the commands """
 
     def execute(self, executor: Executor):
-        executor.shared["mov_history"] = [gui.position()]     # creates history list
-        executor.shared["has_moved"] = False
+        executor.shared["mov_history"] = []     # creates history list
         _set_new_offset(executor.shared, (0,0))
 
 
@@ -61,6 +54,8 @@ class SetupAndStart(Instruction):
 
 class MouseCenter(Instruction):
     def execute(self, executor: Executor):
+        _add_to_history(executor.shared)  # tracks history
+
         # Get screen width and height
         screen_width, screen_height = gui.size()
 
@@ -69,7 +64,6 @@ class MouseCenter(Instruction):
         center_y = screen_height // 2
 
         # Move mouse to center
-        _add_to_history(executor.shared, (center_x, center_y))  # adds to history
         gui.moveTo(center_x, center_y)
 
 @dataclass
@@ -81,11 +75,12 @@ class MouseMove(Instruction):
     time: float = 0.0
 
     def execute(self, executor: Executor):
+        _add_to_history(executor.shared)  # tracks history
+
         new_pos = _offset_point(executor.shared, (self.x, self.y))
         gui.moveTo(new_pos, duration=self.time)
 
         pos = gui.position()
-        _add_to_history(executor.shared, pos)  # adds to history
 
 
 @dataclass
@@ -97,10 +92,9 @@ class MouseMoveRel(Instruction):
     time: float = 0.0
 
     def execute(self, executor: Executor):
-        gui.moveRel(self.x, self.y, self.time)
+        _add_to_history(executor.shared)  # tracks history
 
-        pos = gui.position()
-        _add_to_history(executor.shared, pos)  # adds to history
+        gui.moveRel(self.x, self.y, self.time)
 
 
 class MouseGoBack(Instruction):
