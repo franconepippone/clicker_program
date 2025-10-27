@@ -1,6 +1,6 @@
 ; lang ita
 
-
+label start;
 centermouse;
 wait 1
 move 1 1
@@ -8,13 +8,9 @@ wait 1
 goback
 wait 1
 goback
-wait 1
-moverel 50 0 5
-moverel 0 50 5
-wait 1
-goback
-wait 1
-goback
+jump start 3
+wait 2
+jump start
 
 
 

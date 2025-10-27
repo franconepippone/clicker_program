@@ -54,7 +54,7 @@ class Compiler:
             "click" : lambda butt='left': MouseRightClick() if butt == 'right' else MouseLeftClick(),
             "wait"  : lambda t='0.0' : Wait(float(t)),
             "doubleclick" : lambda: MouseDoubleClick(),
-            "jump" : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name)),
+            "jump" : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name), jmp_name=name),
             "print" : lambda *args: ConsolePrint(' '.join(args)),
             "centermouse" : lambda: MouseCenter(),
             "waitinput" : lambda: WaitInput(),

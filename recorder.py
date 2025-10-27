@@ -49,15 +49,25 @@ class Recorder:
         if not self._recording or not pressed: return
         delta_t = self._add_wait_if_needed()
 
-        # add move
-        self.instructions.append(MouseMove(x, y))
+        is_double_click = delta_t < self.DOUBLE_CLICK_THRESHOLD
 
         # add click
         if button == mouse.Button.left:
-            is_double_click = delta_t < self.DOUBLE_CLICK_THRESHOLD
-            self.instructions.append(MouseLeftClick() if not is_double_click else MouseDoubleClick())
+            if is_double_click:
+                self.instructions.pop(-1)   # removes wait
+                self.instructions.pop(-1)   # removes left click
+                self.instructions.append(MouseDoubleClick())
+            else:
+                self.instructions.append(MouseMove(x, y))
+                self.instructions.append(MouseLeftClick())
+
         elif button == mouse.Button.right:
+            self.instructions.append(MouseMove(x, y))
             self.instructions.append(MouseRightClick())
+        
+        elif button == mouse.Button.middle:
+            self.instructions.append(MouseMove(x, y))
+
 
     # -----------------------------
     # Keyboard Events
@@ -71,7 +81,7 @@ class Recorder:
     # -----------------------------
     # Recording Control
     # -----------------------------
-    def start(self):
+    def start(self) -> List[Instruction]:
         """Begin recording mouse/keyboard events"""
         print("Recording... (press ESC to stop)")
         self._recording = True
@@ -82,6 +92,7 @@ class Recorder:
             k_listener.join()
 
         print("Recording complete. {} instructions captured.".format(len(self.instructions)))
+        return self.get_instructions()
 
     def get_instructions(self) -> List[Instruction]:
         return self.instructions

@@ -185,12 +185,13 @@ class JumpNTimes(Instruction):
             return
 
         self._cnt += 1
-        if self._cnt > self.num:
+        if self._cnt >= self.num:
             self._cnt = 0
             return  # do not jump, loop is over
 
         # jump
         executor.pc = self.jump_idx - 1
+
 
 @dataclass
 class ConsolePrint(Instruction):
