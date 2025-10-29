@@ -3,7 +3,7 @@ import time
 
 from pynput import mouse, keyboard
 
-from commands import (
+from instruction_set import (
     Instruction,
     Wait,
     MouseLeftClick,
@@ -38,7 +38,7 @@ class Recorder:
         delta = now - self._last_time
         self._last_time = now
         if delta > 0.1:  # Ignore very small pauses
-            self.instructions.append(Wait(delta))
+            self.instructions.append(Wait(round(delta, 2)))
         return delta
 
     # -----------------------------

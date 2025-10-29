@@ -1,0 +1,17 @@
+; This code was automatically generated
+
+wait 2.23
+move 1116 230 
+click left
+wait 1.28
+move 447 228 
+click left
+wait 1.18
+move 621 574 
+click left
+wait 1.52
+move 80 995
+click left
+wait 1.61
+move 100 882 
+click left

@@ -1,11 +1,19 @@
 from __future__ import annotations
 from typing import Tuple, Iterable, Dict
-from commands import Instruction
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import logging
 
-from pynput import mouse, keyboard
-
 logger = logging.getLogger("Runtime")
+
+@dataclass
+class Instruction(ABC):
+    """Base instruction class"""
+
+    @abstractmethod
+    def execute(self, executor: Executor):
+        """Implements execution logic for instruction"""
+        raise NotImplementedError
 
 
 class Executor:
@@ -17,12 +25,6 @@ class Executor:
     logger_internal = logger
     shared: Dict
 
-    def _on_press(self, key: keyboard.Key):
-        if key == keyboard.Key.esc:  # Stop recording on ESC
-            logger.info("ESC pressed, stopping execution...")
-            self.running = False
-            return False  # Stop listener
-
     def load_instructions(self, instructions: Iterable[Instruction]) -> Executor:
         self.program = tuple(instructions)
         return self
@@ -32,16 +34,12 @@ class Executor:
         if len(self.program) == 0:
             logger.warning("Program does not contain any instruction.")
             return
-        
-        kblistener = keyboard.Listener(on_press=self._on_press)  # type: ignore
-        kblistener.start()
-        kblistener.wait()
 
         self.shared = {}    # where commands can store shared temporary runtime data
 
         self.pc = 0
         self.running = True
-        logger.info("Beginning execution, press ESC to terminate.")
+        logger.info("Beginning execution")
         while self.running:
             if self.pc >= len(self.program):
                 break

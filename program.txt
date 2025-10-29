@@ -3,23 +3,26 @@
 label start;
 centermouse;
 wait 1
-move 1 1
-wait 1
-goback
-wait 1
-goback
-jump start 3
-wait 2
-jump start
+moverel 50 0 1
+moverel -50 0 1
 
+print halt as da asda nsa as das 
 
+waitinput
+setoffset
 
-
-; LOOP LIKE STRUCTURE
-;label LOOPx
-;    label LOOPy
-;    moverel 0 5
+;LOOP LIKE STRUCTURE
+move 0 0
+label LOOPx
+    label LOOPy
+    moverel 0 5
         ; custom code
-;    jump LOOPy
-;    moverel 5 -5
-;jump LOOPx 100
+    jump LOOPy 10
+    moverel 5 -50
+jump LOOPx 10
+
+wait 1
+
+label LOOP_
+goback
+jump LOOP_ 130

@@ -1,14 +1,12 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING, Dict, Tuple, List
+from typing import Dict, Tuple, List
 from dataclasses import dataclass
-from abc import ABC, abstractmethod
 import time
 
 import pyautogui as gui
 from pynput import keyboard
 
-if TYPE_CHECKING:
-    from executor import Executor  # only for type hints
+from executor import Executor, Instruction
 
 ##### Utility functions
 
@@ -25,17 +23,6 @@ def _set_new_offset(shared: Dict, pos: Tuple[int, int]):
 def _offset_point(shared: Dict, point: Tuple[int, int]) -> Tuple[int, int]:
     # adds stored offset to coordinate
     return point[0] + shared["offset"][0], point[1] + shared["offset"][1]
-
-
-
-@dataclass
-class Instruction(ABC):
-    """Base instruction class"""
-
-    @abstractmethod
-    def execute(self, executor: Executor):
-        """Implements execution logic for instruction"""
-        raise NotImplementedError
 
 
 ### =================================== Internal Instructions ===================================

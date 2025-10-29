@@ -1,9 +1,11 @@
 from typing import List, Tuple, Dict, Callable
 import re
 import logging
+from dataclasses import dataclass
 
-from commands import (
-    Instruction,
+from executor import Instruction
+import language_specs as langcmd
+from instruction_set import (
     Wait,
     MouseLeftClick,
     MouseRightClick,
@@ -15,7 +17,9 @@ from commands import (
     MouseCenter,
     WaitInput,
     MouseGoBack,
-    SetupAndStart
+    SetupAndStart,
+    SetMouseOffset,
+    ClearMouseOffset
 )
 
 logger = logging.getLogger("Compiler")
@@ -32,11 +36,10 @@ class CompilationError(Exception):
         return self.line_i
 
 
-
 class Compiler:
 
     COMMENT = r";"
-    COMMAND_TABLE: Dict[str, Callable]
+    COMMAND_TABLE: Dict[str, Callable[..., Instruction]] # build methods
 
     # these are not executable commands, only exist for the compiler
     COMPILER_DIRECTIVES: Dict[str, Callable]
@@ -48,21 +51,24 @@ class Compiler:
         self.found_labels = {}
         self.instructions = []
 
+        # translates commands to instruction objects
         self.COMMAND_TABLE = {
-            "move" : lambda x, y, t='0.0': MouseMove(int(x), int(y), float(t)),
-            "moverel" : lambda x, y, t='0.0' : MouseMoveRel(int(x), int(y), float(t)),
-            "click" : lambda butt='left': MouseRightClick() if butt == 'right' else MouseLeftClick(),
-            "wait"  : lambda t='0.0' : Wait(float(t)),
-            "doubleclick" : lambda: MouseDoubleClick(),
-            "jump" : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name), jmp_name=name),
-            "print" : lambda *args: ConsolePrint(' '.join(args)),
-            "centermouse" : lambda: MouseCenter(),
-            "waitinput" : lambda: WaitInput(),
-            "goback" : lambda: MouseGoBack()
+            langcmd.MOVE : lambda x, y, t='0.0': MouseMove(int(x), int(y), float(t)),
+            langcmd.MOVEREL : lambda x, y, t='0.0' : MouseMoveRel(int(x), int(y), float(t)),
+            langcmd.CLICK : lambda butt='left': MouseRightClick() if butt == 'right' else MouseLeftClick(),
+            langcmd.WAIT  : lambda t='0.0' : Wait(float(t)),
+            langcmd.DOUBLECLICK : lambda: MouseDoubleClick(),
+            langcmd.JUMP : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name), jmp_name=name),
+            langcmd.PRINT : lambda *args: ConsolePrint(' '.join(args)),
+            langcmd.CENTERMOUSE : lambda: MouseCenter(),
+            langcmd.WAITINPUT : lambda: WaitInput(),
+            langcmd.GOBACK : lambda: MouseGoBack(),
+            langcmd.SETOFFSET : lambda: SetMouseOffset(),
+            langcmd.CLEAROFFSET : lambda: ClearMouseOffset()
         }
 
         self.COMPILER_DIRECTIVES = {
-            "label" : self._register_label
+            langcmd.LABEL : self._register_label
         }
 
     def _get_label_jmp_idx(self, name: str) -> int:
@@ -113,7 +119,7 @@ class Compiler:
         except (TypeError, ValueError) as e:
             raise CompilationError(line_i, f'Failed to build command "{command}", raised error: {e}')
         except CompilationError as e:
-                raise CompilationError(line_i, *e.args)
+            raise CompilationError(line_i, *e.args)
     
     def generate_instructions(self, lines: List[str]) -> List[Instruction] | None:
         """Given a list of raw text lines, generate a list of instructions if possible. Returns None 
@@ -146,8 +152,11 @@ class Compiler:
         """Gets latest compiled instructions"""
         return self.instructions
 
+    def compile_from_src(self, src_text: str):
+        return self.generate_instructions(src_text.splitlines())
+
     def compile_from_file(self, filepath: str) -> List[Instruction] | None:
-        with open("program.txt", "r") as f:
+        with open(filepath, "r") as f:
             text_lines = [line for line in f]
         
         return self.generate_instructions(text_lines)
