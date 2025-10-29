@@ -6,6 +6,8 @@ from typing import Optional
 from logging.handlers import QueueListener
 import multiprocessing
 
+import pyautogui
+
 from recorder import Recorder
 from decompiler import Decompiler
 import logger_config
@@ -22,25 +24,23 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None):
     setup_subprocess_logging(log_queue)
     
     class MouseRecorderDialog(ProcessDialog):
-        worker: ExecutionThread
-
         def __init__(self):
             super().__init__(
                 "Recorder", 
-                "Recording mouse actions, press ESC to terminate.", 
+                "Recording mouse actions, press ESC to cancel (recording will be lost).", 
                 logger_config.logger_editor, 
                 ExecutionThread()
             )
+            self.stop_button.setText("Stop Recording")
+            self.stop_button.clicked.connect(lambda: pyautogui.press('enter'))
 
     class ExecutionThread(QtCore.QThread):
         finished = QtCore.pyqtSignal()
 
         def run(self):
             program = Recorder().start()
-            if not program:
-                return
-
-            src = Decompiler().decompile_to_src(program)
+            if program:
+                src = Decompiler().decompile_to_src(program)
             
             self.finished.emit()
     

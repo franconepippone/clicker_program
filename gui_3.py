@@ -285,11 +285,9 @@ class ScriptEditorApp(QWidget):
     def run_script(self):
         code_src = self.editor.toPlainText()
         logger_exec.info("Running script...")
-        from executor_process import begin_compile_and_execute_process
-        # Launch process with queue logging
 
-        # Keep listener on the instance so we can stop it when the process ends
-        self.queue_listener: QueueListener
+        from executor_process import begin_compile_and_execute_process
+
         self.queue_listener.start()
 
         # Start the subprocess and disable the Run button until it finishes
@@ -298,6 +296,14 @@ class ScriptEditorApp(QWidget):
     
     def record_script(self):
         logger_editor.info("Starting recording session")
+        
+        from recorder_process import begin_recording_process
+
+        self.queue_listener.start()
+
+        self.subprocess_mark_as_started()
+        # Start the subprocess and disable the Run button until it finishes
+        self.proc = begin_recording_process(self.log_queue)
         self.subprocess_mark_as_started()
     
     def subprocess_mark_as_started(self):

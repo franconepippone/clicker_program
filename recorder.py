@@ -12,6 +12,9 @@ from instruction_set import (
     MouseDoubleClick
 )
 
+import logging
+logger = logging.getLogger("Recorder")
+
 # ================================
 # === Input Recorder ===
 # ================================
@@ -57,24 +60,27 @@ class Recorder:
                 self.instructions.pop(-1)   # removes wait
                 self.instructions.pop(-1)   # removes left click
                 self.instructions.append(MouseDoubleClick())
+                logger.info("Recorded double left click at ({}, {})".format(x, y))
             else:
                 self.instructions.append(MouseMove(x, y))
                 self.instructions.append(MouseLeftClick())
+                logger.info("Recorded left click at ({}, {})".format(x, y))
 
         elif button == mouse.Button.right:
             self.instructions.append(MouseMove(x, y))
             self.instructions.append(MouseRightClick())
+            logger.info("Recorded right click at ({}, {})".format(x, y))
         
         elif button == mouse.Button.middle:
             self.instructions.append(MouseMove(x, y))
-
+            logger.info("Recorded mouse move to ({}, {})".format(x, y))
 
     # -----------------------------
     # Keyboard Events
     # -----------------------------
     def _on_press(self, key: keyboard.Key):
-        if key == keyboard.Key.esc:  # Stop recording on ESC
-            print("Recording stopped.")
+        if key == keyboard.Key.enter:  # Stop recording on ESC
+            logger.debug("Recording stopped.")
             self._recording = False
             return False  # Stop listener
 
@@ -83,7 +89,7 @@ class Recorder:
     # -----------------------------
     def start(self) -> List[Instruction]:
         """Begin recording mouse/keyboard events"""
-        print("Recording... (press ESC to stop)")
+        logger.info("Recording... (press ENTER to stop)")
         self._recording = True
         self._last_time = time.time()
 
@@ -91,7 +97,7 @@ class Recorder:
              keyboard.Listener(on_press=self._on_press) as k_listener: # type: ignore
             k_listener.join()
 
-        print("Recording complete. {} instructions captured.".format(len(self.instructions)))
+        logger.info("Recording complete. {} instructions captured.".format(len(self.instructions)))
         return self.get_instructions()
 
     def get_instructions(self) -> List[Instruction]:

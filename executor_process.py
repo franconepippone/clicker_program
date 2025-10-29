@@ -28,9 +28,12 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
 
         def __init__(self):
             super().__init__("Script runner", "Runnig script, press ESC to terminate.", logger_config.logger_editor, ExecutionThread(text))
-            self.worker.compilation_failed.connect(
-                lambda: self.label.setText("Script compilation failed. Check terminal for error messages.")
-            )
+            self.worker.compilation_failed.connect(self._change_text_to_compilation_failed)
+            self.stop_button.clicked.connect(self.terminate_process)
+        
+        def _change_text_to_compilation_failed(self):
+            self.label.setText("Script compilation failed. Check terminal for error messages.")
+            self.stop_button.setText("Close")
 
     class ExecutionThread(QtCore.QThread):
         finished = QtCore.pyqtSignal()

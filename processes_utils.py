@@ -35,6 +35,7 @@ def setup_subprocess_logging(log_queue: Optional[multiprocessing.Queue] = None):
             logger_config.logger_exec,
             logger_config.logger_decompiler,
             logger_config.logger_editor,
+            logger_config.logger_recorder
         ]:
             logger.handlers.clear()
             logger.addHandler(queue_handler)
@@ -56,13 +57,20 @@ class ProcessDialog(QtWidgets.QDialog):
         # add small contents margins so the label wraps inside the dialog borders
         layout.setContentsMargins(8, 8, 8, 8)
         self.label = QtWidgets.QLabel(window_message, self)
+        self.label.setStyleSheet("font-size: 10pt;")
+
         # allow the label to wrap long text within the dialog width
         self.label.setWordWrap(True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)  # type: ignore
         layout.addWidget(self.label)
 
         self.stop_button = QtWidgets.QPushButton("Stop", self)
-        self.stop_button.clicked.connect(self.terminate_process)
+        # Do not let this button auto-become the default (Enter) when focused
+        self.stop_button.setAutoDefault(False)
+        self.stop_button.setDefault(False)
+        # Option A (move initial focus to the dialog itself so the button isn't focused)
+        self.setFocus(QtCore.Qt.OtherFocusReason)  # type: ignore
+
         layout.addWidget(self.stop_button)
 
         self.setLayout(layout)
