@@ -117,11 +117,15 @@ class ScriptEditorApp(QWidget):
         open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self.open_file)
 
-        save_action = QAction("Save as", self)
+        save_action = QAction("Save", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_file)
 
-        file_menu.addActions([new_action, open_action, save_action])
+        save_as_action = QAction("Save as", self)
+        save_as_action.setShortcut("Ctrl+Shift+S")
+        save_as_action.triggered.connect(self.save_file_as)
+
+        file_menu.addActions([new_action, open_action, save_action, save_as_action])
 
         # Preferences menu
         options_menu = menubar.addMenu("Preferences")
@@ -132,7 +136,7 @@ class ScriptEditorApp(QWidget):
         tools_menu = menubar.addMenu("Script Tools")
         offset_action = QAction("Offset All Positions", self)
         tools_menu.addAction(offset_action)
-        offset_action.triggered.connect(show_offset_dialog)
+        offset_action.triggered.connect(lambda: show_offset_dialog(self))
 
         main_layout.setMenuBar(menubar)
 
@@ -287,6 +291,12 @@ class ScriptEditorApp(QWidget):
             self.is_modified=False
             self.current_file=fname
         logger_editor.info(f"Opened file: {self.current_file if self.current_file else 'New file'}")
+
+    def save_file_as(self):
+        fname,_=QFileDialog.getSaveFileName(self,"Save File As","","Text Files (*.txt *.py *.md);;All Files (*)")
+        if not fname: return
+        self.current_file=fname
+        self.save_file()
 
     def save_file(self):
         if not self.current_file:

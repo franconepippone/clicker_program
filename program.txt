@@ -1,15 +1,1 @@
-; Decompiled source code
-; Generated automatically by Mouse Recorder
-
-wait 1.0
-move 1543 230 
-wait 0.68
-move 1530 443 
-wait 0.53
-move 1539 669 
-wait 0.79
-move 944 598 
-click left
-wait 0.39
-move 963 581 
-click left
+diocane

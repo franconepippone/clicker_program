@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QVBoxLayout, QTextEdit
 from PyQt5.QtGui import QPainter, QColor, QTextFormat, QFont
 from PyQt5.QtCore import Qt, QRect, QSize
 
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton
+
 # ----------------------
 # Icon helpers
 # ----------------------
@@ -163,11 +165,9 @@ class CodeEditor(QPlainTextEdit):
         self.setExtraSelections(extraSelections)
 
 
+def show_offset_dialog(parent: QWidget):
 
-def show_offset_dialog(self):
-    from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton
-
-    dialog = QDialog(self)
+    dialog = QDialog(parent)
     dialog.setWindowTitle("Offset All Positions")
     dialog.setModal(True)
     dialog.setFixedSize(250, 150)
@@ -202,7 +202,7 @@ def show_offset_dialog(self):
     layout.addLayout(buttons_layout)
 
     # --- Connections ---
-    confirm_btn.clicked.connect(lambda: self.offset_positions(x_spin.value(), y_spin.value(), dialog))
+    confirm_btn.clicked.connect(lambda: parent.offset_positions(x_spin.value(), y_spin.value(), dialog))
     cancel_btn.clicked.connect(dialog.reject)
 
     dialog.exec_()
