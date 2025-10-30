@@ -1,28 +1,15 @@
-; lang ita
+; Decompiled source code
+; Generated automatically by Mouse Recorder
 
-label start;
-centermouse;
-wait 1
-moverel 50 0 1
-moverel -50 0 1
-
-print halt as da asda nsa as das 
-
-waitinput
-setoffset
-
-;LOOP LIKE STRUCTURE
-move 0 0
-label LOOPx
-    label LOOPy
-    moverel 0 5
-        ; custom code
-    jump LOOPy 10
-    moverel 5 -50
-jump LOOPx 10
-
-wait 1
-
-label LOOP_
-goback
-jump LOOP_ 130
+wait 1.0
+move 1543 230 
+wait 0.68
+move 1530 443 
+wait 0.53
+move 1539 669 
+wait 0.79
+move 944 598 
+click left
+wait 0.39
+move 963 581 
+click left

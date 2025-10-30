@@ -9,12 +9,13 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFrame,
     QPlainTextEdit, QFileDialog, QMessageBox,
-    QSplitter
+    QSplitter, QMenu, QMenuBar, QAction
 )
+from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 
 from logging.handlers import QueueListener
 
-from gui_utils import make_icon, make_eye_icon, ScriptHighlighter
+from gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, show_offset_dialog
 
 
 # ----------------------
@@ -74,61 +75,89 @@ class TerminalLogHandler(QObject, logging.Handler):
 class ScriptEditorApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Script Editor")
-        self.resize(500,600)
-        self.is_modified=False
-        self.current_file=None
-        self.preview_path_on=False
+
+        self.setWindowTitle("Mouse Emulator - Script Editor")
+        self.resize(500, 600)
+        self.is_modified = False
+        self.current_file = None
+        self.preview_path_on = False
         self.proc: Optional[multiprocessing.Process] = None
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(8,8,8,8)
-        main_layout.setSpacing(6)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        # ---------------- File toolbar ----------------
-        file_toolbar = QHBoxLayout()
-        new_btn = QPushButton("New")
-        open_btn = QPushButton("Open")
-        save_btn = QPushButton("Save")
-        for b in [new_btn, open_btn, save_btn]:
-            b.setFixedHeight(32)
-            b.setStyleSheet(self.button_style())
-            file_toolbar.addWidget(b)
-        file_toolbar.addStretch()
+        # ---------------- Native Menu Bar ----------------
+        menubar = QMenuBar(self)
 
-        # Separator
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Sunken)
-        separator.setStyleSheet("color: #ccc;")
+        # Add visual separation: light gray background and borders
+        menubar.setStyleSheet("""
+            QMenuBar {
+                background-color: #f5f5f5;
+                border-bottom: 1px solid #c0c0c0;
+            }
+            QMenuBar::item {
+                spacing: 6px;
+                padding: 4px 12px;
+                background: transparent;
+                border-radius: 4px;
+            }
+            QMenuBar::item:selected {
+                background: #dcdcdc;
+            }
+        """)
 
-        # ---------------- Run / Record / Preview ----------------
+        # File menu
+        file_menu = menubar.addMenu("&File")
+        new_action = QAction("New", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self.new_file)
+
+        open_action = QAction("Open", self)
+        open_action.setShortcut("Ctrl+O")
+        open_action.triggered.connect(self.open_file)
+
+        save_action = QAction("Save as", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self.save_file)
+
+        file_menu.addActions([new_action, open_action, save_action])
+
+        # Preferences menu
+        options_menu = menubar.addMenu("Preferences")
+        options_menu.addAction("Settings...")
+        options_menu.addAction("Appearance...")
+
+        # Script Tools menu
+        tools_menu = menubar.addMenu("Script Tools")
+        offset_action = QAction("Offset All Positions", self)
+        tools_menu.addAction(offset_action)
+        offset_action.triggered.connect(show_offset_dialog)
+
+        main_layout.setMenuBar(menubar)
+
+        # ---------------- Run / Record Toolbar ----------------
         exec_toolbar = QHBoxLayout()
+        exec_toolbar.setContentsMargins(8, 6, 8, 6)  # add spacing from menu
+
         self.run_btn = QPushButton("Run")
         self.run_btn.setIcon(make_icon(QColor("#00cc00"), "triangle"))
         self.run_btn.setToolTip("Run the current script")
+
         self.record_btn = QPushButton("Record")
         self.record_btn.setIcon(make_icon(QColor("#cc0000"), "circle"))
         self.record_btn.setToolTip("Record session")
-        self.preview_btn = QPushButton("Preview Path")
-        self.preview_btn.setCheckable(True)
-        self.preview_btn.setChecked(self.preview_path_on)
-        self.preview_btn.setIcon(make_eye_icon(self.preview_path_on))
-        self.preview_btn.setToolTip("Toggle path preview")
 
-        for b in [self.run_btn, self.record_btn, self.preview_btn]:
+        for b in [self.run_btn, self.record_btn]:
             b.setFixedHeight(32)
             b.setStyleSheet(self.button_style())
+            exec_toolbar.addSpacing(4)
             exec_toolbar.addWidget(b)
+
         exec_toolbar.addStretch()
 
         # ---------------- Editor ----------------
-        self.editor = QPlainTextEdit()
-        self.editor.setPlaceholderText("Type your script...")
-        self.editor.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.editor.setStyleSheet("""
-            QPlainTextEdit { font-family: Consolas, monospace; font-size:14px; border:1px solid #ccc; background-color:#fdfdfd; }
-        """)
+        self.editor = CodeEditor()
         self.highlighter = ScriptHighlighter(self.editor.document())
         self.editor.textChanged.connect(self.mark_modified)
 
@@ -138,7 +167,7 @@ class ScriptEditorApp(QWidget):
         self.terminal.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.terminal.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #1e1e1e;
+                background-color: black;
                 color: #f0f0f0;
                 font-family: Consolas, monospace;
                 font-size: 13px;
@@ -149,7 +178,7 @@ class ScriptEditorApp(QWidget):
         terminal_label.setFixedHeight(20)
 
         terminal_container = QVBoxLayout()
-        terminal_container.setContentsMargins(0,0,0,0)
+        terminal_container.setContentsMargins(0, 0, 0, 0)
         terminal_container.setSpacing(1)
         terminal_container.addWidget(terminal_label)
         terminal_container.addWidget(self.terminal)
@@ -168,32 +197,26 @@ class ScriptEditorApp(QWidget):
         splitter = QSplitter(Qt.Vertical)   # type: ignore[attr-defined]
         splitter.addWidget(self.editor)
         splitter.addWidget(terminal_widget)
-        splitter.setSizes([400,150])
+        splitter.setSizes([400, 150])
 
         # ---------------- Bottom status bar ----------------
         bottom_bar = QFrame()
         bottom_bar.setFrameShape(QFrame.StyledPanel)
         bottom_layout = QHBoxLayout(bottom_bar)
-        bottom_layout.setContentsMargins(10,2,10,2)
+        bottom_layout.setContentsMargins(10, 2, 10, 2)
         self.coord_label = QLabel("X:0, Y:0")
         bottom_layout.addWidget(self.coord_label)
         bottom_layout.addStretch()
 
         # ---------------- Assemble ----------------
-        main_layout.addLayout(file_toolbar)
-        main_layout.addWidget(separator)
         main_layout.addLayout(exec_toolbar)
         main_layout.addWidget(splitter)
         main_layout.addWidget(bottom_bar)
         self.setLayout(main_layout)
 
         # ---------------- Connections ----------------
-        new_btn.clicked.connect(self.new_file)
-        open_btn.clicked.connect(self.open_file)
-        save_btn.clicked.connect(self.save_file)
         self.run_btn.clicked.connect(self.run_script)
         self.record_btn.clicked.connect(self.record_script)
-        self.preview_btn.toggled.connect(self.toggle_preview)
 
         # subprocesses logging queue
         queue_handler = TerminalLogHandler(self.terminal)
@@ -298,12 +321,14 @@ class ScriptEditorApp(QWidget):
         logger_editor.info("Starting recording session")
         
         from recorder_process import begin_recording_process
-
+        # ensure queue listener is running so process logs appear
         self.queue_listener.start()
 
-        self.subprocess_mark_as_started()
-        # Start the subprocess and disable the Run button until it finishes
-        self.proc = begin_recording_process(self.log_queue)
+        # create a small message queue for IPC (child -> parent)
+        self.msg_queue = multiprocessing.Queue()
+
+        # Start the subprocess and disable the Run/Record buttons until it finishes
+        self.proc = begin_recording_process(self.log_queue, self.msg_queue)
         self.subprocess_mark_as_started()
     
     def subprocess_mark_as_started(self):
@@ -319,6 +344,25 @@ class ScriptEditorApp(QWidget):
 
     def _check_process(self):
         """Poll the subprocess; when it exits, stop the listener and re-enable UI."""
+        # First, check for any IPC messages from the child (e.g., recorded src)
+        try:
+            if getattr(self, 'msg_queue', None):
+                # drain any messages - non-blocking
+                while True:
+                    try:
+                        msg = self.msg_queue.get_nowait()
+                    except Exception:
+                        break
+                    else:
+                        # Received recorded source; put into editor on main thread
+                        try:
+                            self.editor.setPlainText(msg)
+                            logger_editor.info("Inserted recorded source into editor.")
+                        except Exception:
+                            logger_editor.exception("Failed to insert recorded source into editor")
+        except Exception:
+            logger_editor.exception("Error while reading msg_queue")
+
         if not isinstance(self.proc, multiprocessing.Process):
             alive = False
         else:
@@ -335,7 +379,7 @@ class ScriptEditorApp(QWidget):
             # reset state
             self.proc = None
 
-            # re-enable Run button 
+            # re-enable Run/Record buttons
             self.run_btn.setEnabled(True)
             self.record_btn.setEnabled(True)
 

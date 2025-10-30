@@ -3,11 +3,9 @@ import sys
 import os
 import logging
 from PyQt5 import QtWidgets, QtCore
-from pynput import keyboard
 from typing import Optional
-from logging.handlers import QueueHandler, QueueListener
+from logging.handlers import QueueListener
 import multiprocessing
-import time
 
 from executor import Executor
 from compiler import Compiler

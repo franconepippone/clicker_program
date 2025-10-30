@@ -15,7 +15,7 @@ import logger_config
 from processes_utils import start_key_listener, setup_subprocess_logging, ProcessDialog
 
 
-def _start_recording(log_queue: Optional[multiprocessing.Queue] = None):
+def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):
     """
     Runs in a subprocess. Shows a small PyQt5 dialog and executes recording logic in 
     a background thread so the GUI remains responsive.
@@ -27,7 +27,7 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None):
         def __init__(self):
             super().__init__(
                 "Recorder", 
-                "Recording mouse actions, press ESC to cancel (recording will be lost).", 
+                "Recording mouse actions, press ENTER to finish recording.\npress ESC to cancel (recording will be lost)", 
                 logger_config.logger_editor, 
                 ExecutionThread()
             )
@@ -39,9 +39,16 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None):
 
         def run(self):
             program = Recorder().start()
+            src = None
             if program:
                 src = Decompiler().decompile_to_src(program)
-            
+            # send recorded source back to parent via result_queue if provided
+            try:
+                if result_queue and src:
+                    result_queue.put(src)
+            except Exception:
+                logger_config.logger_editor.exception("Failed to put src into result_queue")
+
             self.finished.emit()
     
     listener = start_key_listener()
@@ -59,7 +66,8 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None):
 # Helper to start program in a process
 # ---------------------------
 def begin_recording_process(
-    log_queue: Optional[multiprocessing.Queue] = None
+    log_queue: Optional[multiprocessing.Queue] = None,
+    result_queue: Optional[multiprocessing.Queue] = None,
 ) -> multiprocessing.Process:
     """
     Start execution in a separate process from source text.
@@ -67,7 +75,7 @@ def begin_recording_process(
     Logs are redirected to log_queue if provided.
     """
 
-    proc = multiprocessing.Process(target=_start_recording, args=(log_queue,))
+    proc = multiprocessing.Process(target=_start_recording, args=(log_queue, result_queue))
     proc.start()
     return proc
 

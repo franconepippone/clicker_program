@@ -61,17 +61,21 @@ class Decompiler:
             SetupAndStart : None
         }
 
-    def decompile_to_src(self, instructions: Iterable[Instruction]) -> List[str]:
+    def decompile_to_src(self, instructions: Iterable[Instruction]) -> str:
         """Turns list of instructions into source code
         """
-        src: List[str] = []
+        src: List[str] = [
+            "; Decompiled source code",
+            "; Generated automatically by Mouse Recorder",
+            ""
+        ]
 
         for inst in instructions:
             inst_class: type[Instruction] = type(inst)   # get class
 
             if not inst_class in self.INSTRUCTION_TABLE:
                 logger.critical(f"Unknown/unregistered instruction: {inst_class}")
-                return []
+                return "; ERROR: Unknown/unregistered instruction encountered during decompilation."
             
             dcp_fn = self.INSTRUCTION_TABLE[inst_class]
             if dcp_fn:
@@ -79,16 +83,5 @@ class Decompiler:
                 if command_str:
                     src.append(command_str)
         
-        return src
-
-    @staticmethod
-    def save_to_file(path: str, src: List[str]):
-        with open(path, "w") as f:
-
-            f.write(
-                "; This code was automatically generated\n\n"
-            )
-
-            for line in src:
-                f.write(line + "\n")
+        return "\n".join(src)
 
