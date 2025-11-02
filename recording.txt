@@ -2,7 +2,7 @@
 ; Generated automatically by Mouse Recorder
 
 label cristo
-moverel 10 10 2
+moverel 10 10
 wait .5
 jump cristo 5
 

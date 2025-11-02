@@ -1,6 +1,6 @@
-from typing import TypedDict, Dict
+from typing import Dict
 
-from .compiler import Compiler, SEP_SPACE, CompilationError
+from .compiler import Compiler, SEP_SPACE, CompilationError, CompCtxDict
 from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
@@ -35,7 +35,8 @@ CLEAROFFSET = "clearoffset"
 LABEL = "label"
 
 # annotated context dict (shared across command builders)
-class CompilerContextDict(TypedDict):
+class CompilerContextDict(CompCtxDict):
+    # inherits instruction_list
     found_labels: dict[str, int]
 
 # utility functions
@@ -116,7 +117,7 @@ def configure_compiler(compiler: Compiler) -> None:
         if name in found_labels:
             raise CompilationError(-1, f'Label "{name}" already defined')
         
-        jmp_idx = len(compiler_ctx.get('instructions', [])) # points to the next instruction in the instruction list
+        jmp_idx = len(compiler_ctx["instruction_list"]) # points to the next instruction in the instruction list
         found_labels[name] = jmp_idx    # registers label
 
 

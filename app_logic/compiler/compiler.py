@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Tuple, Dict, Callable, get_type_hints, Any
+from typing import List, TypedDict, Dict, Callable, get_type_hints, Any
 import re
 import logging
 from dataclasses import dataclass
@@ -41,18 +41,21 @@ class CompilationError(Exception):
         return self.line_i
 
 
+class CompCtxDict(TypedDict):
+    instruction_list: List[Instruction]
+
 class Compiler:
 
     COMMENT = r";"
     command_table: Dict[str, Callable[..., Instruction]] # build methods
 
-    compilation_ctx: Dict   # context dict shared across all command builders over the whole compilation (e.g. to store variables)
+    compilation_ctx: CompCtxDict   # context dict shared across all command builders over the whole compilation (e.g. to store variables)
     instructions: List[Instruction] 
 
     def __init__(self, configure_function: Callable[[Compiler], None] | None = None) -> None:
         self.found_labels = {}
         self.instructions = []
-        self.compilation_ctx = {}
+        self.compilation_ctx = {"instruction_list" : self.instructions}
         self.command_table = {}
 
         if configure_function:
@@ -103,7 +106,7 @@ class Compiler:
         """
         
         self.instructions = [SetupAndStart()]   # only initial setup instruction
-        self.compilation_ctx = {}
+        self.compilation_ctx = {"instruction_list" : self.instructions}
 
         for line_i, raw_line in enumerate(lines):
             line = self._preprocess_line(raw_line)
