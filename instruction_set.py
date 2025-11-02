@@ -141,8 +141,8 @@ class Wait(Instruction):
     def execute(self, executor: Executor):
         time.sleep(self.time_s)
 
-class WaitInput(Instruction):
-    """Waits until key press"""
+class Pause(Instruction):
+    """Pauses """
 
     def _on_press(self, key: keyboard.Key):
         if key == keyboard.Key.space:
@@ -150,9 +150,8 @@ class WaitInput(Instruction):
 
     def execute(self, executor: Executor):
        """Blocks until key is pressed"""
-       executor.logger_internal.info("Press 'space' to resume.")
-       with keyboard.Listener(on_press=self._on_press) as kb: # type: ignore
-           kb.join()
+       executor.pause()
+       return
 
 
 ### --------------- OTHERS ---------------

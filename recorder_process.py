@@ -12,7 +12,7 @@ from recorder import Recorder
 from decompiler import Decompiler
 import logger_config
 
-from processes_utils import start_key_listener, setup_subprocess_logging, ProcessDialog
+from processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
 
 
 def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):
@@ -31,6 +31,7 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
                 logger_config.logger_editor, 
                 ExecutionThread()
             )
+            self.pause_button.hide()
             self.stop_button.setText("Stop Recording")
             self.stop_button.clicked.connect(lambda: pyautogui.press('enter'))
 
@@ -51,7 +52,7 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
 
             self.finished.emit()
     
-    listener = start_key_listener()
+    listener = start_key_quitter()
 
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)

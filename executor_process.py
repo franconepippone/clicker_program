@@ -1,17 +1,24 @@
 from __future__ import annotations 
+from typing import Optional
 import sys
-import os
 import logging
 from PyQt5 import QtWidgets, QtCore
-from typing import Optional
 from logging.handlers import QueueListener
+import threading
 import multiprocessing
+from pynput import keyboard
 
 from executor import Executor
 from compiler import Compiler
 import logger_config
 
-from processes_utils import start_key_listener, setup_subprocess_logging, ProcessDialog
+from processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
+
+# text shown in the process dialog
+DIALOG_TEXT = """
+Runnig script, press ESC to terminate.
+Press SPACE to pause/resume execution.
+"""
 
 def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue] = None):
     """
@@ -25,21 +32,45 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
         worker: ExecutionThread
 
         def __init__(self):
-            super().__init__("Script runner", "Runnig script, press ESC to terminate.", logger_config.logger_editor, ExecutionThread(text))
+            super().__init__("Script runner", DIALOG_TEXT, logger_config.logger_editor, ExecutionThread(text))
             self.worker.compilation_failed.connect(self._change_text_to_compilation_failed)
             self.stop_button.clicked.connect(self.terminate_process)
+            self.pause_button.clicked.connect(self.worker.executor.pause)
+            self.play_button.clicked.connect(self.worker.executor.resume)
+            self.worker.executor.set_pause_callback(self._on_pause_instruction)
+            self._start_pause_listener()
         
+        def _on_pause_instruction(self):
+            # if pause is requested from instruction, click pause button to update UI (does not affect execution state)
+            if self.pause_button.isVisible():   # only clicks when visible to avoid infinite loop
+                self.pause_button.click() # emulates click (note that at this point execution is already paused by internal call to pause)  
+
         def _change_text_to_compilation_failed(self):
             self.label.setText("Script compilation failed. Check terminal for error messages.")
             self.stop_button.setText("Close")
+        
+        def _start_pause_listener(self):
+            """Starts a keyboard listener that pauses/resumes execution on SPACE key press."""
+            def on_press(key):
+                if key == keyboard.Key.space:
+                    if not self.paused:
+                        self.pause_button.click()
+                    else:
+                        self.play_button.click()
+
+            listener = keyboard.Listener(on_press=on_press)
+            listener.start()
+            return listener
 
     class ExecutionThread(QtCore.QThread):
         finished = QtCore.pyqtSignal()
         compilation_failed = QtCore.pyqtSignal()
+        executor: Executor
 
         def __init__(self, text):
             super().__init__()
             self.text = text
+            self.executor = Executor()
 
         def run(self):
             program = Compiler().compile_from_src(self.text)
@@ -47,11 +78,11 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
                 self.compilation_failed.emit()
                 logger_config.logger_editor.error("Compilation failed.")
                 return
-
-            Executor().load_instructions(program).execute()
+            
+            self.executor.load_instructions(program).execute()
             self.finished.emit()
 
-    key_listener = start_key_listener()
+    key_listener = start_key_quitter()
 
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)

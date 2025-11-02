@@ -15,7 +15,7 @@ from instruction_set import (
     JumpNTimes,
     ConsolePrint,
     MouseCenter,
-    WaitInput,
+    Pause,
     MouseGoBack,
     SetupAndStart,
     SetMouseOffset,
@@ -61,7 +61,7 @@ class Compiler:
             langcmd.JUMP : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name), jmp_name=name),
             langcmd.PRINT : lambda *args: ConsolePrint(' '.join(args)),
             langcmd.CENTERMOUSE : lambda: MouseCenter(),
-            langcmd.WAITINPUT : lambda: WaitInput(),
+            langcmd.PAUSE : lambda: Pause(),
             langcmd.GOBACK : lambda: MouseGoBack(),
             langcmd.SETOFFSET : lambda: SetMouseOffset(),
             langcmd.CLEAROFFSET : lambda: ClearMouseOffset()

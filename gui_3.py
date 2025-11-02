@@ -359,14 +359,23 @@ class ScriptEditorApp(QWidget):
             if getattr(self, 'msg_queue', None):
                 # drain any messages - non-blocking
                 while True:
+
                     try:
                         msg = self.msg_queue.get_nowait()
                     except Exception:
                         break
+                    
                     else:
                         # Received recorded source; put into editor on main thread
                         try:
-                            self.editor.setPlainText(msg)
+                            cursor = self.editor.textCursor()
+                            cursor.beginEditBlock()
+                            # Move to end of the current line, then try to move to the next block (next line)
+                            cursor.movePosition(cursor.EndOfLine)
+                            cursor.insertText("\n" + msg + "\n")
+                            cursor.endEditBlock()
+                            # update editor cursor to reflect the insertion
+                            self.editor.setTextCursor(cursor)
                             logger_editor.info("Inserted recorded source into editor.")
                         except Exception:
                             logger_editor.exception("Failed to insert recorded source into editor")

@@ -14,7 +14,7 @@ from instruction_set import (
     JumpNTimes,
     ConsolePrint,
     MouseCenter,
-    WaitInput,
+    Pause,
     MouseGoBack,
     SetupAndStart,
     SetMouseOffset,
@@ -35,7 +35,7 @@ class Decompiler:
         def _dcp_click_right(i: MouseRightClick) -> str: return f"{langcmd.CLICK} right"
         def _dcp_doubleclick(i: MouseDoubleClick) -> str: return langcmd.DOUBLECLICK
         def _dcp_wait(i: Wait) -> str: return f"{langcmd.WAIT} {i.time_s}"
-        def _dcp_waitinput(i: WaitInput) -> str: return langcmd.WAITINPUT
+        def _dcp_waitinput(i: Pause) -> str: return langcmd.PAUSE
         def _dcp_jump(i: JumpNTimes) -> str: return f"{langcmd.JUMP} {i.jmp_name}"
         def _dcp_print(i: ConsolePrint) -> str: return f"{langcmd.PRINT} {i.msg}"
         def _dcp_centermouse(i: MouseCenter) -> str: return langcmd.CENTERMOUSE
@@ -51,7 +51,7 @@ class Decompiler:
             MouseRightClick : _dcp_click_right,
             MouseDoubleClick : _dcp_doubleclick,
             Wait : _dcp_wait,
-            WaitInput : _dcp_waitinput,
+            Pause : _dcp_waitinput,
             JumpNTimes : _dcp_jump,
             ConsolePrint : _dcp_print,
             MouseCenter : _dcp_centermouse,
