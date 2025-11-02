@@ -1,0 +1,25 @@
+; Example of the working of call / return
+
+jump start ; jump to the main portion of the script
+
+; This function moves the mouse in a square
+label function_1
+	moverel 50 0
+	wait 1
+	moverel 0 50
+	wait 1
+	moverel -50 0
+	wait 1 
+	moverel 0 -50
+	return	; 'return' must be here to use function_1 with 'call'
+
+
+
+label start ; <-- script starts here
+	print Starting program!
+	centermouse	
+	call function_1
+	print Program ended!
+
+
+	

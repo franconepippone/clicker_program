@@ -31,6 +31,42 @@ T = TypeVar("T", bound=CompCtxDict)
 PostProcessFunc: TypeAlias  = Callable[[T, Iterable[Instruction]], Iterable[Instruction]]
 
 class Compiler:
+    """
+    A lightweight, extensible assembler-like compiler that converts lines of text into
+    Instruction objects using registered command builder functions.
+    Key concepts
+    - Lines are preprocessed (comments removed, whitespace normalized) and split into
+        a command and argument string.
+    - Registered command builders (via the `command` decorator) are responsible for
+        producing Instruction instances or performing compile-time actions (e.g. labels).
+    - A shared compilation context dictionary is provided to builders for cross-line
+        state (e.g. resolved labels, variables).
+    - Initial instructions can be set and are prepended to every compilation.
+    - An optional post-processing pass can transform or validate the final instruction list.
+
+    Main behavior
+    - __init__(configure_function=None): constructs the compiler; a configure function may
+        register commands and post-processors.
+    - generate_instructions(lines): produce a list of Instructions from source lines;
+        logs and returns None on CompilationError.
+    - compile_from_src(src_text) / compile_from_file(filepath): helpers that run the full
+        compile pipeline and the optional post-process pass.
+    - command(command_name, arg_sep=...): decorator that registers a builder function.
+        The decorator auto-parses and casts string arguments to annotated types and binds
+        defaults, passing the shared compilation context as the first parameter.
+    - postprocess(func): register a post-processing function (can also be used as a decorator).
+
+    Error handling
+    - Compilation errors raised by builders are reported with source line information.
+    - generate_instructions and compile helpers return None on failure.
+
+    Notes
+    - Command builders must accept the compilation context as their first parameter
+        and return an Instruction or perform compile-time state changes.
+    - The automatic argument casting uses type annotations from the builder function
+        signature and will raise ValueError if casting fails.
+    """
+
 
     COMMENT = r";"
     command_table: Dict[str, Callable[..., Instruction]] # build methods
@@ -187,7 +223,7 @@ class Compiler:
 
 
 if __name__ == "__main__":
-    import utils.logger_config as logger_config    # to load configs
+    import utils.logger_config    # to load configs
 
     with open("program.txt", "r") as f:
         text_lines = [line for line in f]
