@@ -3,7 +3,7 @@ import logging
 import multiprocessing
 
 from PyQt5.QtCore import Qt, QTimer, QObject, pyqtSignal
-from PyQt5.QtGui import QCursor, QColor
+from PyQt5.QtGui import QCursor, QColor, QTextCharFormat
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFrame,
@@ -34,39 +34,45 @@ logger_editor.setLevel(logging.DEBUG)
 # Terminal logging handler
 # ----------------------
 class TerminalLogHandler(QObject, logging.Handler):
-    """Logging handler that safely forwards log strings to the GUI thread.
+    """Logging handler that safely forwards log strings to the GUI thread."""
 
-    Emits a simple string via a Qt signal; the connected slot runs in the
-    GUI thread (the QObject is created in the main thread), so we never
-    pass QTextCursor or other widget objects across threads.
-    """
-
-    new_log = pyqtSignal(str)
+    new_log = pyqtSignal(str, int)  # emit both message and level number
 
     def __init__(self, terminal_widget: QPlainTextEdit) -> None:
         QObject.__init__(self)
         logging.Handler.__init__(self)
         self.terminal: QPlainTextEdit = terminal_widget
-        # Connect the signal to the append routine in the GUI thread
         self.new_log.connect(self._append_to_terminal)
 
-    def _append_to_terminal(self, msg: str) -> None:
+    def _append_to_terminal(self, msg: str, level: int) -> None:
+        # Choose color based on log level
+        color_map = {
+            logging.DEBUG: "#7E7E7E",
+            logging.INFO: "#FFFFFF",
+            logging.WARNING: "#ffe30b",
+            logging.ERROR: "#cc0000",
+            logging.CRITICAL: "#ff0000",
+        }
+        color = color_map.get(level, "#000000")
+
+        # Set text color
         cursor = self.terminal.textCursor()
         cursor.movePosition(cursor.End)
-        cursor.insertText(msg + "\n")
+
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(color))
+        cursor.insertText(msg + "\n", fmt)
+
         self.terminal.setTextCursor(cursor)
         self.terminal.ensureCursorVisible()
 
     def emit(self, record: logging.LogRecord) -> None:
-        # Format the message in whatever thread the logger runs, but emit
-        # only a plain string via the signal. Qt will queue it to the GUI
-        # thread and call _append_to_terminal there.
         try:
             msg = self.format(record)
-            self.new_log.emit(msg)
+            self.new_log.emit(msg, record.levelno)
         except Exception:
-            # Avoid raising from the logging subsystem
             pass
+
 
 # ----------------------
 # Main editor
@@ -153,7 +159,7 @@ class ScriptEditorApp(QWidget):
 
         # Create "Run in Safe Mode" checkbox
         self.safe_mode_checkbox = QCheckBox("Run in safe mode")
-        self.safe_mode_checkbox.setToolTip("Enable safe mode (disables risky operations)")
+        self.safe_mode_checkbox.setToolTip("Disables all mouse click commands, only do movement")
         self.safe_mode_checkbox.setChecked(False)
 
         # Style buttons and add to toolbar

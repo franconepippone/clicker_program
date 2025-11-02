@@ -1,4 +1,5 @@
 from typing import Dict, Iterable, Callable
+from enum import Enum
 
 from .compiler import Compiler, SEP_SPACE, CompilationError, CompCtxDict
 from app_logic.instruction_set import (
@@ -19,7 +20,9 @@ from app_logic.instruction_set import (
     Instruction,
     Call,
     Return,
-    SetSafeMode
+    SetSafeMode,
+    VarMath,
+    SetVar
 )
 
 # instruction names
@@ -38,6 +41,12 @@ GOBACK = "goback"
 SETOFFSET = "setoffset"
 CLEAROFFSET = "clearoffset"
 LABEL = "label"
+
+class MathOperators(Enum):
+    PLUS = "+"
+    MINUS = "-"
+    TIMES = "*"
+    DIV = "/"
 
 # annotated context dict (shared across command builders)
 class CompilerContextDict(CompCtxDict):
@@ -88,9 +97,8 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
         def jump_command(compiler_ctx: CompilerContextDict, name: str, n: int = -1) -> JumpNTimes:
             return JumpNTimes(n, -100, jmp_name=name)   # jmp indx assigned at post-processing
 
-        @compiler.command(PRINT, arg_sep=SEP_SPACE)
-        def print_command(compiler_ctx: CompilerContextDict, *args: str) -> ConsolePrint:
-            message = ' '.join(args)
+        @compiler.command(PRINT)
+        def print_command(compiler_ctx: CompilerContextDict, message: str) -> ConsolePrint:
             return ConsolePrint(message)
 
         @compiler.command(CENTERMOUSE)
@@ -127,14 +135,27 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
             found_labels[name] = jmp_idx    # registers label
 
         @compiler.command(CALL)
-        def call_command(compiler_ctx: CompilerContextDict, name: str):
+        def call_command(compiler_ctx: CompilerContextDict, name: str) -> Call:
             # -1 is there because call inherits from jumpntimes
             return Call(-1, -100, jmp_name=name)   # jmp indx assigned at post-processing
 
         @compiler.command(RETURN)
-        def return_command(compiler_ctx: CompilerContextDict):
+        def return_command(compiler_ctx: CompilerContextDict) -> Return:
             return Return()
 
+        @compiler.command('var')
+        def var_command(
+            compiler_ctx: CompilerContextDict, 
+            target_name: str, 
+            action: str, 
+            left_val: float, 
+            operation: MathOperators | None = None,
+            right_val: float  = -1
+        ) -> VarMath | SetVar:
+            pass
+
+            
+    
         ### POST PROCESS INSTRUCTIONS
 
         @compiler.postprocess

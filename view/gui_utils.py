@@ -125,6 +125,8 @@ class CodeEditor(QPlainTextEdit):
 
         self.line_number_area = LineNumberArea(self)
 
+        self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 5)
+
         # Signals for updating line numbers when needed
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)

@@ -135,7 +135,7 @@ if __name__ == "__main__":
     with open("recording.txt", "r", encoding="utf-8") as f:
         text = f.read()
 
-    proc = begin_compile_and_execute_process(text, log_queue)
+    proc = begin_compile_and_execute_process(text, log_queue=log_queue)
     print("Press ESC or click Stop in the popup to terminate the running process.")
 
     try:

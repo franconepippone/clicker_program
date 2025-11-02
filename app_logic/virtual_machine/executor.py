@@ -99,7 +99,12 @@ class Executor:
                 break
             
             inst: Instruction = self.program[self.pc]
-            inst.execute(self)
+            try:
+                inst.execute(self)
+            except Exception as e:
+                logger.critical(f"Execution of {inst} raised an exception: {e}")
+                return 
+
             logger.debug(f"Executed instruction {inst}")
 
             self.pc += 1
