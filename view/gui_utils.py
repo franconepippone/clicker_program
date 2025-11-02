@@ -33,30 +33,64 @@ def make_eye_icon(on: bool, size: int=14):
 # Syntax highlighter
 # ----------------------
 
-KEYWORDS = [
-    "move", "moverel", "click", "wait", "doubleclick", "jump",
-    "print", "centermouse", "pause", "goback",
-    "setoffset", "clearoffset", "label"
+KEYWORDS_BLUE = [
+    "move", "moverel", "click", "wait", "doubleclick",
+    "print", "centermouse", "goback",
+    "setoffset", "clearoffset", "pause"
+]
+
+KEYWORDS_ORANGE = [
+    "call", "return", "jump", "label"
+]
+
+KEYWORDS_PURPLE = [
+    "var"
 ]
 
 class ScriptHighlighter(QSyntaxHighlighter):
     def __init__(self, document) -> None:
         super().__init__(document)
-        self.keyword_format = QTextCharFormat()
-        self.keyword_format.setForeground(QColor("#005cc5"))
-        self.keyword_format.setFontWeight(QFont.Bold)
-        self.comment_format = QTextCharFormat()
-        self.comment_format.setForeground(QColor("#999999"))
-        self.comment_format.setFontItalic(True)
+
+        # Define color schemes for each keyword group
+        self.keyword_formats = {
+            "blue": self._make_format("#005cc5", bold=True),
+            "purple": self._make_format("#6f42c1", bold=True),
+            "orange": self._make_format("#d73a49", bold=True),
+        }
+
+        # Build keyword lists with their colors
+        self.keyword_groups = [
+            (KEYWORDS_BLUE, self.keyword_formats["blue"]),
+            (KEYWORDS_PURPLE, self.keyword_formats["purple"]),
+            (KEYWORDS_ORANGE, self.keyword_formats["orange"]),
+        ]
+
+        # Comment style
+        self.comment_format = self._make_format("#999999", italic=True)
+
+    def _make_format(self, color: str, bold=False, italic=False) -> QTextCharFormat:
+        """Helper to create a consistent text format."""
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(color))
+        if bold:
+            fmt.setFontWeight(QFont.Bold)
+        if italic:
+            fmt.setFontItalic(True)
+        return fmt
 
     def highlightBlock(self, text: str | None) -> None:
-        if not text: return # should never happen
+        if not text:
+            return
 
-        for word in KEYWORDS:
-            pattern = r'\b{}\b'.format(re.escape(word))
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                s, e = match.span()
-                self.setFormat(s, e - s, self.keyword_format)
+        # Highlight keywords (case-insensitive)
+        for keywords, fmt in self.keyword_groups:
+            for word in keywords:
+                pattern = r'\b{}\b'.format(re.escape(word))
+                for match in re.finditer(pattern, text, re.IGNORECASE):
+                    start, end = match.span()
+                    self.setFormat(start, end - start, fmt)
+
+        # Highlight comments starting with ';'
         comment_index = text.find(";")
         if comment_index >= 0:
             self.setFormat(comment_index, len(text) - comment_index, self.comment_format)

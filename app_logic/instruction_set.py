@@ -20,10 +20,22 @@ def _get_from_hystory(shared: Dict) -> Tuple[int, int] | None:
 def _set_new_offset(shared: Dict, pos: Tuple[int, int]):
     shared["offset"] = pos
 
+
 def _offset_point(shared: Dict, point: Tuple[int, int]) -> Tuple[int, int]:
     # adds stored offset to coordinate
     return point[0] + shared["offset"][0], point[1] + shared["offset"][1]
 
+def _push_pc(shared: Dict, pc: int):
+    print("PUSHING PC: ", pc)
+    shared["inst_ptr"].append(pc)
+    print(shared["inst_ptr"])
+
+def _pop_pc(shared: Dict) -> int | None:
+    print("POPPING PC")
+    if len(shared["inst_ptr"]) > 0:
+        return shared["inst_ptr"].pop()
+    else:
+        print("WARNING")
 
 ### =================================== Internal Instructions ===================================
 
@@ -32,6 +44,7 @@ class SetupAndStart(Instruction):
 
     def execute(self, executor: Executor):
         executor.shared["mov_history"] = []     # creates history list
+        executor.shared["inst_ptr"] = []    # used with call / return to remember pc
         _set_new_offset(executor.shared, (0,0))
 
 
@@ -157,7 +170,7 @@ class Pause(Instruction):
 
 @dataclass
 class JumpNTimes(Instruction):
-    num: int
+    num: int # if set to -1 do infinte jump
     jump_idx: int
     _cnt: int = 0
     jmp_name: str = "??"
@@ -177,13 +190,23 @@ class JumpNTimes(Instruction):
         # jump
         executor.pc = self.jump_idx - 1
 
+class Call(JumpNTimes):
+    def execute(self, executor: Executor):
+        _push_pc(executor.shared, executor.pc + 1) # next instruction
+        super().execute(executor)
+
+class Return(Instruction):
+    def execute(self, executor: Executor):
+        pc = _pop_pc(executor.shared)
+        if pc:
+            executor.pc = pc    # return to call point
 
 @dataclass
 class ConsolePrint(Instruction):
     msg: str
 
     def execute(self, executor: Executor):
-        print(self.msg)
+        executor.logger_internal.info(self.msg)
 
 
 

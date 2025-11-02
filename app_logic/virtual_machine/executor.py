@@ -108,8 +108,5 @@ class Executor:
             
 
 
-if __name__ == "__main__":
-    import logger_config
-
 
         

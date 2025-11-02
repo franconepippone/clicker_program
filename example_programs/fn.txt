@@ -1,0 +1,24 @@
+
+jump main	; avvia il programma
+
+; funzione 1
+label funzione_1
+print f1
+pause
+print -f1
+return
+
+; funzione 2
+label funzione_2
+print f2
+call funzione_1
+print end_f1
+wait 1
+print -f2
+return
+
+label main
+pause
+call funzione_2
+wait .5
+print fine

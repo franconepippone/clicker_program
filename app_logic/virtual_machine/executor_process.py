@@ -38,7 +38,7 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
             self.pause_button.clicked.connect(self.worker.executor.pause)
             self.play_button.clicked.connect(self.worker.executor.resume)
             self.worker.executor.set_pause_callback(self._on_pause_instruction)
-            self._start_pause_listener()
+            self.listener = self._start_pause_listener()
         
         def _on_pause_instruction(self):
             # if pause is requested from instruction, click pause button to update UI (does not affect execution state)
@@ -49,6 +49,7 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
             self.label.setText("Script compilation failed. Check terminal for error messages.")
             self.stop_button.setText("Close")
             self.pause_button.hide()
+            self.listener.stop()  
         
         def _start_pause_listener(self):
             """Starts a keyboard listener that pauses/resumes execution on SPACE key press."""

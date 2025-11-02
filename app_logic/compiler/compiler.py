@@ -49,20 +49,6 @@ class Compiler:
         if configure_function:
             configure_function(self)
 
-    def _get_label_jmp_idx(self, name: str) -> int:
-        jmp_idx: int | None = self.found_labels.get(name)
-        if not jmp_idx:
-            raise CompilationError(-1, f'Undefined label "{name}"')
-
-        return jmp_idx
-
-    def _register_label(self, name: str):
-        if name in self.found_labels:
-            raise CompilationError(-1, f'Label "{name}" already defined')
-        
-        jmp_idx = len(self.instructions) # points to the next instruction in the instruction list
-        self.found_labels[name] = jmp_idx    # registers label
-
     def _preprocess_line(self, org_line: str) -> str:
         """ Strips tabs, indent, collapses spaces and removes comments """
         return re.sub(r'\s+', ' ', org_line.split(self.COMMENT, 1)[0].strip()).strip()
@@ -125,11 +111,13 @@ class Compiler:
             return
         
         # if a post_process_step is registered, call it
-        
-        print(self.post_process_fn)
         if self.post_process_fn:
             logger.info("Performing post-processing pass.")
-            return list(self.post_process_fn(self.compilation_ctx, inst_list.copy()))    
+            try:
+                return list(self.post_process_fn(self.compilation_ctx, inst_list.copy()))
+            except CompilationError as e:
+                logger.critical("(line %s) %s", e.line_i + 1, e.args[0])
+                return
 
         return inst_list
 
@@ -151,6 +139,7 @@ class Compiler:
             sig = inspect.signature(func)
             hints = get_type_hints(func)
             params = list(sig.parameters.values())[1:]  # skip compiler_ctx
+            params_amount = len(params)
 
             def cast(value: Any, typ: type) -> Any:
                 """Try to cast string values to annotated types."""
@@ -166,7 +155,8 @@ class Compiler:
             def wrapper(arg_string: str) -> Instruction:
                 """Wrapper that splits arg_string and casts args before calling the actual command builder.
                 """
-                args: list[str] = arg_string.split(arg_sep) if arg_string else []
+                # only perform params_amount - 1 split
+                args: list[str] = arg_string.split(arg_sep, params_amount - 1) if arg_string else []
 
                 bound_args: list[Any] = []
 

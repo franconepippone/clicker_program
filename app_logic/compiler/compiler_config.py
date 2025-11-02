@@ -16,7 +16,9 @@ from app_logic.instruction_set import (
     SetupAndStart,
     SetMouseOffset,
     ClearMouseOffset,
-    Instruction
+    Instruction,
+    Call,
+    Return
 )
 
 # instruction names
@@ -26,6 +28,8 @@ CLICK = "click"
 WAIT = "wait"
 DOUBLECLICK = "doubleclick"
 JUMP = "jump"
+CALL = "call"
+RETURN = "return"
 PRINT = "print"
 CENTERMOUSE = "centermouse"
 PAUSE = "pause"
@@ -119,6 +123,14 @@ def configure_compiler(compiler: Compiler) -> None:
         jmp_idx = len(compiler_ctx["instruction_list"]) # points to the next instruction in the instruction list
         found_labels[name] = jmp_idx    # registers label
 
+    @compiler.command(CALL)
+    def call_command(compiler_ctx: CompilerContextDict, name: str):
+        # -1 is there because call inherits from jumpntimes
+        return Call(-1, -100, jmp_name=name)   # jmp indx assigned at post-processing
+
+    @compiler.command(RETURN)
+    def return_command(compiler_ctx: CompilerContextDict):
+        return Return()
 
     ### POST PROCESS INSTRUCTIONS
 
@@ -127,7 +139,7 @@ def configure_compiler(compiler: Compiler) -> None:
         """Additional step to link all jumps to labels idxs"""
 
         for inst in instructions:
-            if isinstance(inst, JumpNTimes):
+            if isinstance(inst, (JumpNTimes, Call)):
                 jmp_idx = get_label_jmp_idx(compiler_ctx, inst.jmp_name)
                 inst.jump_idx = jmp_idx
 
