@@ -149,9 +149,8 @@ class Pause(Instruction):
             return False    # stop listener
 
     def execute(self, executor: Executor):
-       """Blocks until key is pressed"""
+       """Pauses executor"""
        executor.pause()
-       return
 
 
 ### --------------- OTHERS ---------------

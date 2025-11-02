@@ -35,7 +35,7 @@ def make_eye_icon(on: bool, size: int=14):
 
 KEYWORDS = [
     "move", "moverel", "click", "wait", "doubleclick", "jump",
-    "print", "centermouse", "waitinput", "goback",
+    "print", "centermouse", "pause", "goback",
     "setoffset", "clearoffset", "label"
 ]
 
