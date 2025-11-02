@@ -1,10 +1,12 @@
-from typing import List, Tuple, Dict, Callable
+from __future__ import annotations
+from typing import List, Tuple, Dict, Callable, get_type_hints, Any
 import re
 import logging
 from dataclasses import dataclass
+from enum import Enum
+import inspect
 
 from executor import Instruction
-import language_specs as langcmd
 from instruction_set import (
     Wait,
     MouseLeftClick,
@@ -25,6 +27,9 @@ from instruction_set import (
 logger = logging.getLogger("Compiler")
 
 
+SEP_SPACE = ' '
+SEP_COMMA = ','
+
 class CompilationError(Exception):
     line_i: int
 
@@ -39,37 +44,19 @@ class CompilationError(Exception):
 class Compiler:
 
     COMMENT = r";"
-    COMMAND_TABLE: Dict[str, Callable[..., Instruction]] # build methods
+    command_table: Dict[str, Callable[..., Instruction]] # build methods
 
-    # these are not executable commands, only exist for the compiler
-    COMPILER_DIRECTIVES: Dict[str, Callable]
-
-    found_labels: Dict[str, int]    # name, idx pair
+    compilation_ctx: Dict   # context dict shared across all command builders over the whole compilation (e.g. to store variables)
     instructions: List[Instruction] 
 
-    def __init__(self) -> None:
+    def __init__(self, configure_function: Callable[[Compiler], None] | None = None) -> None:
         self.found_labels = {}
         self.instructions = []
+        self.compilation_ctx = {}
+        self.command_table = {}
 
-        # translates commands to instruction objects
-        self.COMMAND_TABLE = {
-            langcmd.MOVE : lambda x, y, t='0.0': MouseMove(int(x), int(y), float(t)),
-            langcmd.MOVEREL : lambda x, y, t='0.0' : MouseMoveRel(int(x), int(y), float(t)),
-            langcmd.CLICK : lambda butt='left': MouseRightClick() if butt == 'right' else MouseLeftClick(),
-            langcmd.WAIT  : lambda t='0.0' : Wait(float(t)),
-            langcmd.DOUBLECLICK : lambda: MouseDoubleClick(),
-            langcmd.JUMP : lambda name, n=-1: JumpNTimes(int(n), self._get_label_jmp_idx(name), jmp_name=name),
-            langcmd.PRINT : lambda *args: ConsolePrint(' '.join(args)),
-            langcmd.CENTERMOUSE : lambda: MouseCenter(),
-            langcmd.PAUSE : lambda: Pause(),
-            langcmd.GOBACK : lambda: MouseGoBack(),
-            langcmd.SETOFFSET : lambda: SetMouseOffset(),
-            langcmd.CLEAROFFSET : lambda: ClearMouseOffset()
-        }
-
-        self.COMPILER_DIRECTIVES = {
-            langcmd.LABEL : self._register_label
-        }
+        if configure_function:
+            configure_function(self)
 
     def _get_label_jmp_idx(self, name: str) -> int:
         jmp_idx: int | None = self.found_labels.get(name)
@@ -90,36 +77,25 @@ class Compiler:
         return re.sub(r'\s+', ' ', org_line.split(self.COMMENT, 1)[0].strip()).strip()
 
     def _build_instruction(self, line: str, line_i: int) -> Instruction | None:
-        """Takes a sanitized text line and tries to decode command either into an instruction or in 
-        a compile time directive (i.e. labels)
+        """Takes a sanitized text line and calls respective command builder if command is registered. 
+        Can return an instruction object, or just execute interal compile time logic (i.e. label command).
         """
 
-        words: List[str] = line.split(" ")
+        words: List[str] = line.split(" ", 1)
         command: str = words[0]     # should always be present because of sanitazing step
-        args: List[str] = words[1:] # might be empty list
-
-        # fetches compiler directives first
-        directive_function = self.COMPILER_DIRECTIVES.get(command, None)
-        if directive_function:
-            try:
-                directive_function(*args)
-            except (TypeError, ValueError) as e:
-                raise CompilationError(line_i, f'Failed to execute directive "{command}", raised error: {e}')
-            except CompilationError as e:
-                raise CompilationError(line_i, *e.args)
-            return None
+        args_string: str = words[1] if len(words) > 1 else ""
 
         # fetches command build function
-        build_function = self.COMMAND_TABLE.get(command, None)   
+        build_function = self.command_table.get(command, None)   
         if not build_function: 
             raise CompilationError(line_i, f'Unkwown command: "{command}"')
         
         try:
-            return build_function(*args)    # builds the instruction object
-        except (TypeError, ValueError) as e:
-            raise CompilationError(line_i, f'Failed to build command "{command}", raised error: {e}')
+            return build_function(args_string)    # builds the instruction object
         except CompilationError as e:
-            raise CompilationError(line_i, *e.args)
+            raise CompilationError(line_i, *e.args) 
+        except Exception as e:
+            raise CompilationError(line_i, f'Failed to build command "{command}", raised error: {e}')
     
     def generate_instructions(self, lines: List[str]) -> List[Instruction] | None:
         """Given a list of raw text lines, generate a list of instructions if possible. Returns None 
@@ -127,7 +103,7 @@ class Compiler:
         """
         
         self.instructions = [SetupAndStart()]   # only initial setup instruction
-        self.found_labels = {}
+        self.compilation_ctx = {}
 
         for line_i, raw_line in enumerate(lines):
             line = self._preprocess_line(raw_line)
@@ -160,6 +136,50 @@ class Compiler:
             text_lines = [line for line in f]
         
         return self.generate_instructions(text_lines)
+
+    def command(self, command_name: str, arg_sep: str = SEP_SPACE) -> Callable:
+        """Decorator to register a command builder with automatic type casting."""
+
+        def decorator(func: Callable) -> Callable:
+            sig = inspect.signature(func)
+            hints = get_type_hints(func)
+            params = list(sig.parameters.values())[1:]  # skip compiler_ctx
+
+            def cast(value: Any, typ: type) -> Any:
+                """Try to cast string values to annotated types."""
+                if isinstance(value, str) and typ is not str:
+                    try:
+                        return typ(value)
+                    except Exception:
+                        # optionally log casting error here
+                        raise ValueError(f"Cannot cast value '{value}' to type {typ}")
+                    
+                return value
+
+            def wrapper(arg_string: str) -> Instruction:
+                """Wrapper that splits arg_string and casts args before calling the actual command builder.
+                """
+                args: list[str] = arg_string.split(arg_sep) if arg_string else []
+
+                bound_args: list[Any] = []
+
+                # cast and bind positional args
+                for arg, param in zip(args, params):
+                    typ = hints.get(param.name, type(arg))
+                    bound_args.append(cast(arg, typ))
+
+                # fill in remaining params with defaults
+                for param in params[len(args):]:
+                    if param.default is not inspect._empty:
+                        val = cast(param.default, hints.get(param.name, type(param.default)))
+                        bound_args.append(val)
+
+                return func(self.compilation_ctx, *bound_args)
+
+            self.command_table[command_name] = wrapper  # register command
+            return wrapper
+
+        return decorator
 
 
 

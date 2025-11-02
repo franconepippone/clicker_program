@@ -10,6 +10,7 @@ from pynput import keyboard
 
 from executor import Executor
 from compiler import Compiler
+from compiler_config import configure_compiler
 import logger_config
 
 from processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
@@ -48,6 +49,7 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
         def _change_text_to_compilation_failed(self):
             self.label.setText("Script compilation failed. Check terminal for error messages.")
             self.stop_button.setText("Close")
+            self.pause_button.hide()
         
         def _start_pause_listener(self):
             """Starts a keyboard listener that pauses/resumes execution on SPACE key press."""
@@ -73,7 +75,7 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
             self.executor = Executor()
 
         def run(self):
-            program = Compiler().compile_from_src(self.text)
+            program = Compiler(configure_compiler).compile_from_src(self.text)
             if not program:
                 self.compilation_failed.emit()
                 logger_config.logger_editor.error("Compilation failed.")
@@ -129,7 +131,7 @@ if __name__ == "__main__":
     listener.start()
 
     # Load and run program from file
-    with open("program.txt", "r", encoding="utf-8") as f:
+    with open("recording.txt", "r", encoding="utf-8") as f:
         text = f.read()
 
     proc = begin_compile_and_execute_process(text, log_queue)

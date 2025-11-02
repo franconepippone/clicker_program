@@ -1,15 +1,10 @@
 ; Decompiled source code
 ; Generated automatically by Mouse Recorder
 
-wait 0.77
-move 1168 465 
-click left
-wait 0.39
-move 1233 448 
-click left
-wait 0.36
-move 1263 445 
-click left
-wait 0.36
-move 1265 445 
-click left
+label cristo
+moverel 10 10 2
+wait .5
+jump cristo 5
+
+pause
+jump cristo
