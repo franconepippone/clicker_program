@@ -8,11 +8,11 @@ import multiprocessing
 
 import pyautogui
 
-from recorder import Recorder
-from decompiler import Decompiler
-import logger_config
+from app_logic.recorder.recorder import Recorder
+from app_logic.decompiler.decompiler import Decompiler
+import utils.logger_config as logger_config
 
-from processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
+from utils.processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
 
 
 def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):

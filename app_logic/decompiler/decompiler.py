@@ -2,9 +2,8 @@ from typing import List, Tuple, Dict, Callable, Iterable
 import re
 import logging
 
-from executor import Instruction
-import language_specs as langcmd
-from instruction_set import (
+from app_logic.virtual_machine.executor import Instruction
+from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
     MouseRightClick,
@@ -23,25 +22,41 @@ from instruction_set import (
 
 logger = logging.getLogger("Decompiler")
 
+
+MOVE = "move"
+MOVEREL = "moverel"
+CLICK = "click"
+WAIT = "wait"
+DOUBLECLICK = "doubleclick"
+JUMP = "jump"
+PRINT = "print"
+CENTERMOUSE = "centermouse"
+PAUSE = "pause"
+GOBACK = "goback"
+SETOFFSET = "setoffset"
+CLEAROFFSET = "clearoffset"
+LABEL = "label"
+
+
 class Decompiler:
 
     INSTRUCTION_TABLE: Dict[type, Callable[..., str] | None]
 
     def __init__(self) -> None:
 
-        def _dcp_move(i: MouseMove) -> str: return f"{langcmd.MOVE} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
-        def _dcp_moverel(i: MouseMoveRel) -> str: return f"{langcmd.MOVEREL} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
-        def _dcp_click_left(i: MouseLeftClick) -> str: return f"{langcmd.CLICK} left"
-        def _dcp_click_right(i: MouseRightClick) -> str: return f"{langcmd.CLICK} right"
-        def _dcp_doubleclick(i: MouseDoubleClick) -> str: return langcmd.DOUBLECLICK
-        def _dcp_wait(i: Wait) -> str: return f"{langcmd.WAIT} {i.time_s}"
-        def _dcp_waitinput(i: Pause) -> str: return langcmd.PAUSE
-        def _dcp_jump(i: JumpNTimes) -> str: return f"{langcmd.JUMP} {i.jmp_name}"
-        def _dcp_print(i: ConsolePrint) -> str: return f"{langcmd.PRINT} {i.msg}"
-        def _dcp_centermouse(i: MouseCenter) -> str: return langcmd.CENTERMOUSE
-        def _dcp_goback(i: MouseGoBack) -> str: return langcmd.GOBACK
-        def _dcp_setoffset(i: SetMouseOffset) -> str: return langcmd.SETOFFSET
-        def _dcp_clearoffset(i: ClearMouseOffset) -> str: return langcmd.CLEAROFFSET
+        def _dcp_move(i: MouseMove) -> str: return f"{MOVE} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
+        def _dcp_moverel(i: MouseMoveRel) -> str: return f"{MOVEREL} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
+        def _dcp_click_left(i: MouseLeftClick) -> str: return f"{CLICK} left"
+        def _dcp_click_right(i: MouseRightClick) -> str: return f"{CLICK} right"
+        def _dcp_doubleclick(i: MouseDoubleClick) -> str: return DOUBLECLICK
+        def _dcp_wait(i: Wait) -> str: return f"{WAIT} {i.time_s}"
+        def _dcp_waitinput(i: Pause) -> str: return PAUSE
+        def _dcp_jump(i: JumpNTimes) -> str: return f"{JUMP} {i.jmp_name}"
+        def _dcp_print(i: ConsolePrint) -> str: return f"{PRINT} {i.msg}"
+        def _dcp_centermouse(i: MouseCenter) -> str: return CENTERMOUSE
+        def _dcp_goback(i: MouseGoBack) -> str: return GOBACK
+        def _dcp_setoffset(i: SetMouseOffset) -> str: return SETOFFSET
+        def _dcp_clearoffset(i: ClearMouseOffset) -> str: return CLEAROFFSET
         
         
         self.INSTRUCTION_TABLE = {

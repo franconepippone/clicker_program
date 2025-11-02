@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 import inspect
 
-from executor import Instruction
-from instruction_set import (
+from app_logic.virtual_machine.executor import Instruction
+from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
     MouseRightClick,
@@ -184,7 +184,7 @@ class Compiler:
 
 
 if __name__ == "__main__":
-    import logger_config    # to load configs
+    import utils.logger_config as logger_config    # to load configs
 
     with open("program.txt", "r") as f:
         text_lines = [line for line in f]

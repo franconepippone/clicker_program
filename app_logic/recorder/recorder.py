@@ -3,7 +3,7 @@ import time
 
 from pynput import mouse, keyboard
 
-from instruction_set import (
+from app_logic.instruction_set import (
     Instruction,
     Wait,
     MouseLeftClick,

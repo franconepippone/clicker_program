@@ -7,7 +7,7 @@ import os
 import time
 from pynput import keyboard
 
-import logger_config
+import utils.logger_config as logger_config
 
 
 def start_key_quitter():

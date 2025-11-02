@@ -6,7 +6,7 @@ import time
 import pyautogui as gui
 from pynput import keyboard
 
-from executor import Executor, Instruction
+from app_logic.virtual_machine.executor import Executor, Instruction
 
 ##### Utility functions
 

@@ -4,16 +4,15 @@ import sys
 import logging
 from PyQt5 import QtWidgets, QtCore
 from logging.handlers import QueueListener
-import threading
 import multiprocessing
 from pynput import keyboard
 
-from executor import Executor
-from compiler import Compiler
-from compiler_config import configure_compiler
-import logger_config
+from .executor import Executor
+from app_logic.compiler.compiler import Compiler
+from app_logic.compiler.compiler_config import configure_compiler
+import utils.logger_config as logger_config
 
-from processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
+from utils.processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
 
 # text shown in the process dialog
 DIALOG_TEXT = """

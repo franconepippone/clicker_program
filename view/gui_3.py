@@ -1,7 +1,6 @@
-import sys
+from typing import Optional
 import logging
 import multiprocessing
-from typing import Optional
 
 from PyQt5.QtCore import Qt, QTimer, QObject, pyqtSignal
 from PyQt5.QtGui import QCursor, QColor
@@ -15,7 +14,7 @@ from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 
 from logging.handlers import QueueListener
 
-from gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, show_offset_dialog
+from .gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, show_offset_dialog
 
 
 # ----------------------
@@ -319,7 +318,7 @@ class ScriptEditorApp(QWidget):
         code_src = self.editor.toPlainText()
         logger_exec.info("Running script...")
 
-        from executor_process import begin_compile_and_execute_process
+        from app_logic.virtual_machine.executor_process import begin_compile_and_execute_process
 
         self.queue_listener.start()
 
@@ -330,7 +329,7 @@ class ScriptEditorApp(QWidget):
     def record_script(self):
         logger_editor.info("Starting recording session")
         
-        from recorder_process import begin_recording_process
+        from app_logic.recorder.recorder_process import begin_recording_process
         # ensure queue listener is running so process logs appear
         self.queue_listener.start()
 
@@ -405,11 +404,3 @@ class ScriptEditorApp(QWidget):
             # stop the monitor timer
             self.proc_monitor_timer.stop()
 
-# ----------------------
-# Run the app
-# ----------------------
-if __name__=="__main__":
-    app = QApplication(sys.argv)
-    window = ScriptEditorApp()
-    window.show()
-    sys.exit(app.exec_())

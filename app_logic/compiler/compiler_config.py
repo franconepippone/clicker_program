@@ -1,8 +1,7 @@
-from compiler import Compiler, SEP_SPACE, CompilationError
 from typing import TypedDict, Dict
 
-import language_specs as langcmd
-from instruction_set import (
+from .compiler import Compiler, SEP_SPACE, CompilationError
+from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
     MouseRightClick,
