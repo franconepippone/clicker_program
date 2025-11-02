@@ -37,12 +37,14 @@ class Compiler:
 
     compilation_ctx: CompCtxDict   # context dict shared across all command builders over the whole compilation (e.g. to store variables)
     instructions: List[Instruction]
+    initial_instructions: List[Instruction] # configurable, placed at the beginning of every program
 
     post_process_fn: PostProcessFunc | None = None 
 
     def __init__(self, configure_function: Callable[[Compiler], None] | None = None) -> None:
         self.found_labels = {}
         self.instructions = []
+        self.initial_instructions = []
         self.compilation_ctx = {"instruction_list" : self.instructions}
         self.command_table = {}
 
@@ -74,12 +76,16 @@ class Compiler:
         except Exception as e:
             raise CompilationError(line_i, f'Failed to build command "{command}", raised error: {e}')
     
+    def set_initial_instructions(self, instructions: Iterable[Instruction]):
+        """These instructions will be copied and placed at the beginning of every program"""
+        self.initial_instructions = list(instructions)
+    
     def generate_instructions(self, lines: List[str]) -> List[Instruction] | None:
         """Given a list of raw text lines, generate a list of instructions if possible. Returns None 
         if compilation raises any errors, and logs to logger.
         """
         
-        self.instructions = [SetupAndStart()]   # only initial setup instruction
+        self.instructions = self.initial_instructions.copy()   # copies initial instructions
         self.compilation_ctx = {"instruction_list" : self.instructions}
 
         for line_i, raw_line in enumerate(lines):

@@ -37,8 +37,15 @@ def _pop_pc(shared: Dict) -> int | None:
     else:
         print("WARNING")
 
+def _set_safemode(shared: Dict, value: bool):
+    shared["safe_mode"] = value
+
+def _get_safemode(shared: Dict) -> bool:
+    return shared["safe_mode"]
+
 ### =================================== Internal Instructions ===================================
 
+@dataclass
 class SetupAndStart(Instruction):
     """ Sets up all the shared memory properties to work for all the commands """
 
@@ -46,7 +53,7 @@ class SetupAndStart(Instruction):
         executor.shared["mov_history"] = []     # creates history list
         executor.shared["inst_ptr"] = []    # used with call / return to remember pc
         _set_new_offset(executor.shared, (0,0))
-
+        executor.shared["safe_mode"] = False
 
 ### =================================== App Instructions ===================================
 
@@ -129,17 +136,20 @@ class MouseLeftClick(Instruction):
     """Left click the mouse in the current location"""
 
     def execute(self, executor: Executor):
+        if _get_safemode(executor.shared): return  
         gui.leftClick()
 
 class MouseRightClick(Instruction):
     """Right click the mouse in the current location"""
 
     def execute(self, executor: Executor):
+        if _get_safemode(executor.shared): return 
         gui.rightClick()
 
 class MouseDoubleClick(Instruction):
     """Double click the mouse in the current location"""
     def execute(self, executor: Executor):
+        if _get_safemode(executor.shared): return
         gui.doubleClick()
 
 
@@ -190,6 +200,23 @@ class JumpNTimes(Instruction):
         # jump
         executor.pc = self.jump_idx - 1
 
+@dataclass
+class ConsolePrint(Instruction):
+    msg: str
+
+    def execute(self, executor: Executor):
+        executor.logger_internal.info(self.msg)
+
+@dataclass
+class SetSafeMode(Instruction):
+    on: bool
+    
+    def execute(self, executor: Executor):
+        _set_safemode(executor.shared, self.on)
+        executor.logger_internal.info(f"Safe mode is {"enabled" if self.on else "disabled"}")
+
+### --------------- FUNCTIONS ---------------
+
 class Call(JumpNTimes):
     def execute(self, executor: Executor):
         _push_pc(executor.shared, executor.pc + 1) # next instruction
@@ -201,12 +228,6 @@ class Return(Instruction):
         if pc:
             executor.pc = pc    # return to call point
 
-@dataclass
-class ConsolePrint(Instruction):
-    msg: str
-
-    def execute(self, executor: Executor):
-        executor.logger_internal.info(self.msg)
 
 
 

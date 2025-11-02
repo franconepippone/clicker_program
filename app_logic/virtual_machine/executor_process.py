@@ -9,7 +9,7 @@ from pynput import keyboard
 
 from .executor import Executor
 from app_logic.compiler.compiler import Compiler
-from app_logic.compiler.compiler_config import configure_compiler
+from app_logic.compiler.compiler_config import get_compiler_cfg
 import utils.logger_config as logger_config
 
 from utils.processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
@@ -20,7 +20,7 @@ Runnig script, press ESC to terminate.
 Press SPACE to pause/resume execution.
 """
 
-def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue] = None):
+def _run_program_from_text(text: str, safemode: bool, log_queue: Optional[multiprocessing.Queue] = None):
     """
     Runs in a subprocess. Shows a small PyQt5 dialog and executes program logic
     in a background thread so the GUI remains responsive.
@@ -75,7 +75,8 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
             self.executor = Executor()
 
         def run(self):
-            program = Compiler(configure_compiler).compile_from_src(self.text)
+            cfg_fn = get_compiler_cfg(safemode=safemode)
+            program = Compiler(cfg_fn).compile_from_src(self.text)
             if not program:
                 self.compilation_failed.emit()
                 logger_config.logger_editor.error("Compilation failed.")
@@ -99,7 +100,7 @@ def _run_program_from_text(text: str, log_queue: Optional[multiprocessing.Queue]
 # Helper to start program in a process
 # ---------------------------
 def begin_compile_and_execute_process(
-    text: str, log_queue: Optional[multiprocessing.Queue] = None
+    text: str, safemode: bool = False, log_queue: Optional[multiprocessing.Queue] = None
 ) -> multiprocessing.Process:
     """
     Start execution in a separate process from source text.
@@ -107,7 +108,7 @@ def begin_compile_and_execute_process(
     Logs are redirected to log_queue if provided.
     """
 
-    proc = multiprocessing.Process(target=_run_program_from_text, args=(text, log_queue))
+    proc = multiprocessing.Process(target=_run_program_from_text, args=(text, safemode, log_queue))
     proc.start()
     return proc
 

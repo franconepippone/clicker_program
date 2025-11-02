@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFrame,
     QPlainTextEdit, QFileDialog, QMessageBox,
-    QSplitter, QMenu, QMenuBar, QAction
+    QSplitter, QMenu, QMenuBar, QAction, QCheckBox
 )
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 
@@ -151,12 +151,20 @@ class ScriptEditorApp(QWidget):
         self.record_btn.setIcon(make_icon(QColor("#cc0000"), "circle"))
         self.record_btn.setToolTip("Record session")
 
+        # Create "Run in Safe Mode" checkbox
+        self.safe_mode_checkbox = QCheckBox("Run in safe mode")
+        self.safe_mode_checkbox.setToolTip("Enable safe mode (disables risky operations)")
+        self.safe_mode_checkbox.setChecked(False)
+
+        # Style buttons and add to toolbar
         for b in [self.run_btn, self.record_btn]:
             b.setFixedHeight(32)
             b.setStyleSheet(self.button_style())
             exec_toolbar.addSpacing(4)
             exec_toolbar.addWidget(b)
 
+        exec_toolbar.addSpacing(16)
+        exec_toolbar.addWidget(self.safe_mode_checkbox)
         exec_toolbar.addStretch()
 
         # ---------------- Editor ----------------
@@ -220,6 +228,7 @@ class ScriptEditorApp(QWidget):
         # ---------------- Connections ----------------
         self.run_btn.clicked.connect(self.run_script)
         self.record_btn.clicked.connect(self.record_script)
+        #self.safe_mode_checkbox.cl
 
         # subprocesses logging queue
         queue_handler = TerminalLogHandler(self.terminal)
@@ -314,6 +323,9 @@ class ScriptEditorApp(QWidget):
     # run / record methods
     # ==========================================================
 
+    def _get_safe_mode_flag(self) -> bool:
+        return self.safe_mode_checkbox.isChecked()
+
     def run_script(self):
         code_src = self.editor.toPlainText()
         logger_exec.info("Running script...")
@@ -323,7 +335,7 @@ class ScriptEditorApp(QWidget):
         self.queue_listener.start()
 
         # Start the subprocess and disable the Run button until it finishes
-        self.proc = begin_compile_and_execute_process(code_src, self.log_queue)
+        self.proc = begin_compile_and_execute_process(code_src, self._get_safe_mode_flag(), self.log_queue)
         self.subprocess_mark_as_started()
     
     def record_script(self):
