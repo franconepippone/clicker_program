@@ -1,28 +1,11 @@
 from __future__ import annotations
-from typing import List, TypedDict, Dict, Callable, get_type_hints, Any
+from typing import List, TypedDict, Dict, Callable, get_type_hints, Any, Iterable, TypeVar, TypeAlias 
 import re
 import logging
-from dataclasses import dataclass
-from enum import Enum
 import inspect
 
 from app_logic.virtual_machine.executor import Instruction
-from app_logic.instruction_set import (
-    Wait,
-    MouseLeftClick,
-    MouseRightClick,
-    MouseMove,
-    MouseMoveRel,
-    MouseDoubleClick,
-    JumpNTimes,
-    ConsolePrint,
-    MouseCenter,
-    Pause,
-    MouseGoBack,
-    SetupAndStart,
-    SetMouseOffset,
-    ClearMouseOffset
-)
+from app_logic.instruction_set import SetupAndStart
 
 logger = logging.getLogger("Compiler")
 
@@ -44,13 +27,18 @@ class CompilationError(Exception):
 class CompCtxDict(TypedDict):
     instruction_list: List[Instruction]
 
+T = TypeVar("T", bound=CompCtxDict)
+PostProcessFunc: TypeAlias  = Callable[[T, Iterable[Instruction]], Iterable[Instruction]]
+
 class Compiler:
 
     COMMENT = r";"
     command_table: Dict[str, Callable[..., Instruction]] # build methods
 
     compilation_ctx: CompCtxDict   # context dict shared across all command builders over the whole compilation (e.g. to store variables)
-    instructions: List[Instruction] 
+    instructions: List[Instruction]
+
+    post_process_fn: PostProcessFunc | None = None 
 
     def __init__(self, configure_function: Callable[[Compiler], None] | None = None) -> None:
         self.found_labels = {}
@@ -132,13 +120,29 @@ class Compiler:
         return self.instructions
 
     def compile_from_src(self, src_text: str):
-        return self.generate_instructions(src_text.splitlines())
+        inst_list = self.generate_instructions(src_text.splitlines())
+        if inst_list is None:
+            return
+        
+        # if a post_process_step is registered, call it
+        
+        print(self.post_process_fn)
+        if self.post_process_fn:
+            logger.info("Performing post-processing pass.")
+            return list(self.post_process_fn(self.compilation_ctx, inst_list.copy()))    
+
+        return inst_list
 
     def compile_from_file(self, filepath: str) -> List[Instruction] | None:
         with open(filepath, "r") as f:
-            text_lines = [line for line in f]
+            src_text = f.read()
         
-        return self.generate_instructions(text_lines)
+        return self.compile_from_src(src_text)
+
+    def postprocess(self, func: PostProcessFunc) -> PostProcessFunc:
+        """Decorator to bind a post_process_function. Can also be called directly"""
+        self.post_process_fn = func
+        return func
 
     def command(self, command_name: str, arg_sep: str = SEP_SPACE) -> Callable:
         """Decorator to register a command builder with automatic type casting."""

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Iterable
 
 from .compiler import Compiler, SEP_SPACE, CompilationError, CompCtxDict
 from app_logic.instruction_set import (
@@ -19,7 +19,7 @@ from app_logic.instruction_set import (
     Instruction
 )
 
-
+# instruction names
 MOVE = "move"
 MOVEREL = "moverel"
 CLICK = "click"
@@ -79,8 +79,7 @@ def configure_compiler(compiler: Compiler) -> None:
 
     @compiler.command(JUMP)
     def jump_command(compiler_ctx: CompilerContextDict, name: str, n: int = -1) -> JumpNTimes:
-        jmp_idx = get_label_jmp_idx(compiler_ctx, name)     # to be moved in the post-processing step
-        return JumpNTimes(n, jmp_idx, jmp_name=name)
+        return JumpNTimes(n, -100, jmp_name=name)   # jmp indx assigned at post-processing
 
     @compiler.command(PRINT, arg_sep=SEP_SPACE)
     def print_command(compiler_ctx: CompilerContextDict, *args: str) -> ConsolePrint:
@@ -121,3 +120,15 @@ def configure_compiler(compiler: Compiler) -> None:
         found_labels[name] = jmp_idx    # registers label
 
 
+    ### POST PROCESS INSTRUCTIONS
+
+    @compiler.postprocess
+    def post_process_jumps(compiler_ctx: CompilerContextDict, instructions: Iterable[Instruction]) -> Iterable[Instruction]:
+        """Additional step to link all jumps to labels idxs"""
+
+        for inst in instructions:
+            if isinstance(inst, JumpNTimes):
+                jmp_idx = get_label_jmp_idx(compiler_ctx, inst.jmp_name)
+                inst.jump_idx = jmp_idx
+
+        return instructions

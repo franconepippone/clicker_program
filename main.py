@@ -11,3 +11,4 @@ if __name__=="__main__":
     window = ScriptEditorApp()
     window.show()
     sys.exit(app.exec_())
+
