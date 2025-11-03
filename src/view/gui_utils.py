@@ -1,22 +1,38 @@
 import re
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QIcon, QColor, QPixmap, QPainter, QFont, QTextCharFormat, QSyntaxHighlighter
-from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QVBoxLayout, QTextEdit
-from PyQt5.QtGui import QPainter, QColor, QTextFormat, QFont
-from PyQt5.QtCore import Qt, QRect, QSize
-
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton
+from PyQt6.QtCore import Qt, QPoint, QRect, QSize
+from PyQt6.QtGui import (
+    QIcon,
+    QColor,
+    QPixmap,
+    QPainter,
+    QFont,
+    QTextCharFormat,
+    QSyntaxHighlighter,
+    QTextFormat,
+    QPaintEvent
+)
+from PyQt6.QtWidgets import (
+    QWidget,
+    QPlainTextEdit,
+    QVBoxLayout,
+    QTextEdit,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QSpinBox,
+    QPushButton,
+)
 
 # ----------------------
 # Icon helpers
 # ----------------------
 def make_icon(color: QColor, shape: str, size: int = 14):
     pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.transparent)         # type: ignore[attr-defined]
+    pixmap.fill(Qt.GlobalColor.transparent)         
     painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setBrush(color)
-    painter.setPen(Qt.NoPen)            # type: ignore[attr-defined]
+    painter.setPen(Qt.PenStyle.NoPen)            
     if shape == "circle":
         painter.drawEllipse(0,0,size,size)
     elif shape == "triangle":
@@ -73,7 +89,7 @@ class ScriptHighlighter(QSyntaxHighlighter):
         fmt = QTextCharFormat()
         fmt.setForeground(QColor(color))
         if bold:
-            fmt.setFontWeight(QFont.Bold)
+            fmt.setFontWeight(QFont.Weight.Bold)
         if italic:
             fmt.setFontItalic(True)
         return fmt
@@ -101,11 +117,11 @@ class LineNumberArea(QWidget):
         super().__init__(editor)
         self.code_editor = editor
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         return QSize(self.code_editor.line_number_area_width(), 0)
 
-    def paintEvent(self, event):
-        self.code_editor.line_number_area_paint_event(event)
+    def paintEvent(self, a0: QPaintEvent | None) -> None:
+        self.code_editor.line_number_area_paint_event(a0)
 
 
 class CodeEditor(QPlainTextEdit):
@@ -113,7 +129,7 @@ class CodeEditor(QPlainTextEdit):
         super().__init__(parent)
 
         self.setPlaceholderText("Type your script...")
-        self.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.setStyleSheet("""
             QPlainTextEdit {
                 font-family: Consolas, monospace;
@@ -154,8 +170,8 @@ class CodeEditor(QPlainTextEdit):
         if rect.contains(self.viewport().rect()):
             self.update_line_number_area_width(0)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
         cr = self.contentsRect()
         self.line_number_area.setGeometry(
             QRect(cr.left(), cr.top(), self.line_number_area_width(), cr.height())
@@ -173,11 +189,11 @@ class CodeEditor(QPlainTextEdit):
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(block_number + 1)
-                painter.setPen(Qt.gray)
+                painter.setPen(Qt.GlobalColor.gray)
                 painter.drawText(
                     0, top, self.line_number_area.width() - 4,
                     self.fontMetrics().height(),
-                    Qt.AlignRight, number
+                    Qt.AlignmentFlag.AlignRight, number
                 )
             block = block.next()
             top = bottom
@@ -193,7 +209,7 @@ class CodeEditor(QPlainTextEdit):
             selection = QTextEdit.ExtraSelection()
             lineColor = QColor("#e8f2ff")
             selection.format.setBackground(lineColor)
-            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
             extraSelections.append(selection)
@@ -238,7 +254,7 @@ def show_offset_dialog(parent: QWidget):
     layout.addLayout(buttons_layout)
 
     # --- Connections ---
-    confirm_btn.clicked.connect(lambda: parent.offset_positions(x_spin.value(), y_spin.value(), dialog))
+    #confirm_btn.clicked.connect(lambda: parent.offset_positions(x_spin.value(), y_spin.value(), dialog))
     cancel_btn.clicked.connect(dialog.reject)
 
-    dialog.exec_()
+    dialog.exec()

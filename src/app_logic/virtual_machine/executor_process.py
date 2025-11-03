@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional
 import sys
 import logging
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 from logging.handlers import QueueListener
 import multiprocessing
 from pynput import keyboard
@@ -93,7 +93,7 @@ def _run_program_from_text(text: str, safemode: bool, log_queue: Optional[multip
     app = QtWidgets.QApplication(sys.argv)
     dlg = ScriptRunnerDialog()
     dlg.show()
-    app.exec_()
+    app.exec()
 
     key_listener.stop()
 

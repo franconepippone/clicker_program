@@ -30,10 +30,10 @@ doubleclick ; doubleclick left mouse button
 pause
 
 ;; Creating loops with labels and jumps
-label LOOP-x
+label LOOP
     moverel 10 0    ; moves 10px to the right
     ; <-- Your custom code
-    jump LOOP-x 10  ; jumps to LOOP-x 10 times in a row
+    jump LOOP 10  ; jumps to LOOP-x 10 times in a row
 
 ;; Nested loops
 label LOOP-x

@@ -2,15 +2,14 @@ from typing import Optional
 import logging
 import multiprocessing
 
-from PyQt5.QtCore import Qt, QTimer, QObject, pyqtSignal
-from PyQt5.QtGui import QCursor, QColor, QTextCharFormat, QIcon
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import Qt, QTimer, QObject, pyqtSignal
+from PyQt6.QtGui import QCursor, QColor, QTextCharFormat, QIcon, QAction, QTextCursor
+from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFrame,
     QPlainTextEdit, QFileDialog, QMessageBox,
-    QSplitter, QMenu, QMenuBar, QAction, QCheckBox
+    QSplitter, QMenu, QMenuBar, QCheckBox
 )
-from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 
 from logging.handlers import QueueListener
 
@@ -57,7 +56,7 @@ class TerminalLogHandler(QObject, logging.Handler):
 
         # Set text color
         cursor = self.terminal.textCursor()
-        cursor.movePosition(cursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
 
         fmt = QTextCharFormat()
         fmt.setForeground(QColor(color))
@@ -240,14 +239,14 @@ class ScriptEditorApp(QWidget):
             logger.addHandler(main_handler)
 
         # ---------------- Splitter ----------------
-        splitter = QSplitter(Qt.Vertical)   # type: ignore[attr-defined]
+        splitter = QSplitter(Qt.Orientation.Vertical)   
         splitter.addWidget(self.editor)
         splitter.addWidget(terminal_widget)
         splitter.setSizes([400, 150])
 
         # ---------------- Bottom status bar ----------------
         bottom_bar = QFrame()
-        bottom_bar.setFrameShape(QFrame.StyledPanel)
+        bottom_bar.setFrameShape(QFrame.Shape.StyledPanel)
         bottom_layout = QHBoxLayout(bottom_bar)
         bottom_layout.setContentsMargins(10, 2, 10, 2)
         self.coord_label = QLabel("X:0, Y:0")
@@ -339,12 +338,7 @@ class ScriptEditorApp(QWidget):
                 background-color: #eaeaea;
             }
         """
-
-    def toggle_preview(self, checked):
-        self.preview_path_on = checked
-        self.preview_btn.setIcon(make_eye_icon(checked))
-        logger_editor.info(f"Preview Path {'ON' if checked else 'OFF'}")
-
+    
     # ==========================================================
     # script save / load methods
     # ==========================================================
@@ -354,9 +348,15 @@ class ScriptEditorApp(QWidget):
 
     def confirm_discard_changes(self):
         if self.is_modified:
-            reply = QMessageBox.question(self,"Unsaved Changes",
-                "You have unsaved changes. Discard?", QMessageBox.Yes|QMessageBox.No, QMessageBox.No)
-            if reply==QMessageBox.No: return False
+            reply = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Discard?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return False
         return True
 
     def new_file(self):

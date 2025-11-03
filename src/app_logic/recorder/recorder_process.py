@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 import logging
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 from typing import Optional
 from logging.handlers import QueueListener
 import multiprocessing
@@ -58,7 +58,7 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
     app = QtWidgets.QApplication(sys.argv)
     dlg = MouseRecorderDialog()
     dlg.show()
-    app.exec_()
+    app.exec()
     
     listener.stop()
     

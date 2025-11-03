@@ -1,6 +1,6 @@
 from typing import Optional
 import multiprocessing
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import os
@@ -51,7 +51,9 @@ class ProcessDialog(QtWidgets.QDialog):
         super().__init__()
         self.setWindowTitle(window_title)
         self.setWindowFlags(
-            QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Dialog | QtCore.Qt.WindowCloseButtonHint  # type: ignore
+            QtCore.Qt.WindowType.WindowStaysOnTopHint
+            | QtCore.Qt.WindowType.Dialog
+            | QtCore.Qt.WindowType.WindowCloseButtonHint
         )
         self.setFixedSize(300, 150)
 
@@ -65,7 +67,7 @@ class ProcessDialog(QtWidgets.QDialog):
         self.label = QtWidgets.QLabel(window_message, self)
         self.label.setStyleSheet("font-size: 10pt;")
         self.label.setWordWrap(True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)  # type: ignore
+        self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter) 
         layout.addWidget(self.label)
 
         # --- Buttons layout ---
@@ -73,14 +75,14 @@ class ProcessDialog(QtWidgets.QDialog):
 
         # Pause button
         self.pause_button = QtWidgets.QPushButton("Pause", self)
-        self.pause_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPause))
+        self.pause_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPause))
         self.pause_button.setAutoDefault(False)
         self.pause_button.setDefault(False)
         self.pause_button.clicked.connect(self.toggle_pause)
 
         # Play button (initially hidden)
         self.play_button = QtWidgets.QPushButton("Play", self)
-        self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))
+        self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPlay))
         self.play_button.setAutoDefault(False)
         self.play_button.setDefault(False)
         self.play_button.hide()
@@ -88,7 +90,7 @@ class ProcessDialog(QtWidgets.QDialog):
 
         # Stop button
         self.stop_button = QtWidgets.QPushButton("Stop", self)
-        self.stop_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaStop))
+        self.stop_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaStop))
         self.stop_button.setAutoDefault(False)
         self.stop_button.setDefault(False)
 
@@ -104,7 +106,7 @@ class ProcessDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
         # Move focus away from buttons initially
-        self.setFocus(QtCore.Qt.OtherFocusReason)  # type: ignore
+        self.setFocus(QtCore.Qt.FocusReason.OtherFocusReason) 
 
         # Start execution in background thread
         self.worker = execution_thread
