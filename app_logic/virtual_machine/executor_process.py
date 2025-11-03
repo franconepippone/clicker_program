@@ -6,6 +6,7 @@ from PyQt5 import QtWidgets, QtCore
 from logging.handlers import QueueListener
 import multiprocessing
 from pynput import keyboard
+import time
 
 from .executor import Executor
 from app_logic.compiler.compiler import Compiler
@@ -83,6 +84,7 @@ def _run_program_from_text(text: str, safemode: bool, log_queue: Optional[multip
                 return
             
             self.executor.load_instructions(program).execute()
+            time.sleep(.5)   # waits for all logs to arrive
             self.finished.emit()
 
     key_listener = start_key_quitter()

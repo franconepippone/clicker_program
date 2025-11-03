@@ -11,6 +11,10 @@ from pynput import keyboard
 
 from app_logic.virtual_machine.executor import Executor, Instruction
 
+
+WARN_STACK_SIZE = 500
+MAX_STACK_SIZE = 1000
+
 ##### Utility classes
 
 class SharedRuntimeDict(TypedDict):
@@ -90,7 +94,17 @@ def _is_valid_var_name(name: str) -> bool:
     return True
 
 
+
 def _get_variable(shared: SharedRuntimeDict, name: str) -> float:
+    specials = {
+        '$MOUSE_X' : gui.position()[0],
+        '$MOUSE_Y' : gui.position()[1],
+        '$OFFSET_X': shared["offset"][0],
+        '$OFFSET_Y': shared["offset"][1]
+    }
+    if name in specials:
+        return specials[name]
+
     val = shared["vars"].get(name)
     if val is None:
         raise RuntimeError(f"Undefined variable '{name}'")
@@ -114,8 +128,18 @@ def _offset_point(shared: SharedRuntimeDict, point: Tuple[int, int]) -> Tuple[in
     return point[0] + shared["offset"][0], point[1] + shared["offset"][1]
 
 def _push_pc(shared: SharedRuntimeDict, pc: int):
-    shared["pc_stack"].append(pc)
-    print(shared["pc_stack"])
+    stack = shared["pc_stack"]
+    stack.append(pc)
+    return
+
+    if len(stack) == WARN_STACK_SIZE:
+        shared["logger"].warning("PC stack is approaching overflow, is the program stuck in a recursive loop?")
+        import time
+        time.sleep(.5)
+    elif len(stack) >= MAX_STACK_SIZE:
+        import time
+        time.sleep(3)
+        #raise RuntimeError("Stack overflow, too many unreturned function calls")   
 
 def _pop_pc(shared: SharedRuntimeDict) -> int | None:
     if len(shared["pc_stack"]) > 0:
@@ -315,7 +339,7 @@ class SetSafeMode(Instruction):
 
 class Call(JumpNTimes):
     def execute(self, executor: Executor):
-        _push_pc(_getshrdict(executor), executor.pc + 1) # next instruction
+        _push_pc(_getshrdict(executor), executor.pc) # next instruction
         super().execute(executor)
 
 class Return(Instruction):

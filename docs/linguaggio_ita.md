@@ -73,15 +73,48 @@ Esempio:
 
 ---
 
-## 💬 Console / Output
+##  🧮 Variabili
+Tutte le funzionalità inerenti alle variabili sono unificate nel comando **var** :
 
-- **print** `<message...>`  
-  Stampa un messaggio nella console.  
-  Esempio: `print Hello world!`
+- **var** `<nome> = <valore>`   
+  Assegna `<valore>` alla variabile `<nome>`. `<valore>` può essere un valore "letterale" (es.: `10`, `2.5`) oppure un riferimento ad un'altra variabile (es.: `x`, `la_mia_variabile`).  
+  Esempio: `var x = 1`, `var x = y`
+
+- **var** `<nome> = <valore> <OPERAZIONE> <valore>`   
+  Esegue un operazione matematica fra i due valori inseriti (come nel caso precedente, possono essere sia "letterali" sia riferimenti a altre variabili). Le operazioni possibili sono `+`, `-`, `*`, `/`.
+  Esempio: `var x = x + 1`, `var x = y * z`
+
+
+Esistono delle variabili globali speciali di sola lettura, che non possono essere modificate ma solo copiate in altre variabili. Sono prefissate dal carattere `$`:
+- `$MOUSE_X` coordinata x del mouse
+- `$MOUSE_Y` coordinata y del mouse
+- `$OFFSET_X` offset applicato sulla coordinata x (generato con **setoffset**)
+- `$OFFSET_Y` offset applicato sulla coordinata y
+
+La maggior parte dei comandi che accettano dei numeri come parametri (es.: `move`, `moverel`, `jump`, `wait`) supportano il passaggio di variabili. Esempi:
+- `move x y`  
+- `wait PAUSE_SECS`
+- `moverel 50 incremento_y`  
+
+dove **x**, **y**, **PAUSE_SECS**, **incremento_y** sono tutte variabili definite in una porzione precedente del codice.  
+
+Consulta *example_programs/variables.txt* per esempi pratici.
 
 ---
 
-## Utilità 
+## 💬 Console / Output
+
+- **print** `<message...>`  
+  Stampa un messaggio nel terminale.  
+  Esempio: `print Hello world!`
+
+- **printvar** `<nome>`  
+  Stampa il valore della variabile inserita nel terminale.  
+  Esempio: `printvar x` > **Terminal: x = 3.0**
+
+---
+
+## 🧰 Utilità 
 
 - **centermouse**  
   Sposta il cursore al centro dello schermo.  

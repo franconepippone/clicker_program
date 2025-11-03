@@ -1,11 +1,11 @@
 ;; EXAMPLE FILE TO SHOW USAGE OF VARIABLES
 
 ; Basic arithmetics
-; All args must be separated by space, x=3 doesn't work
+; N.B: SPACES are important! x=3 doesn't work
 var x = 3 
 var y = 4
 
-var out = x + y	
+var out = x + y	 
 printvar out
 
 var out = x - y
@@ -30,12 +30,20 @@ label loopStart
 
 ; Combining variables and move commands
 
-; draws a parabula
+; Draws a parabula
 
-setoffset
-var mouse_x = $mousex
-var mouse_y = $mousey
+setoffset	; initializing variables
+var mouse_x = 0
+var mouse_y = 0
+var y_vel = -30
 
+label drawStart
+	var mouse_x = mouse_x + 10
+	var mouse_y = mouse_y + y_vel
+	var y_vel = y_vel + 2		; Decreases velocity, acts like gravity
+	
+	;move mouse_x mouse_y
+	call drawStart
 
 
 

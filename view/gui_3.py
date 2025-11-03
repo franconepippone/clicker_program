@@ -3,7 +3,7 @@ import logging
 import multiprocessing
 
 from PyQt5.QtCore import Qt, QTimer, QObject, pyqtSignal
-from PyQt5.QtGui import QCursor, QColor, QTextCharFormat
+from PyQt5.QtGui import QCursor, QColor, QTextCharFormat, QIcon
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFrame,
@@ -138,11 +138,14 @@ class ScriptEditorApp(QWidget):
         options_menu.addAction("Appearance...")
 
         # Script Tools menu
-        tools_menu = menubar.addMenu("Script Tools")
-        offset_action = QAction("Offset All Positions", self)
-        tools_menu.addAction(offset_action)
-        offset_action.triggered.connect(lambda: show_offset_dialog(self))
+        #tools_menu = menubar.addMenu("Script Tools")
+        #offset_action = QAction("Offset All Positions", self)
+        #tools_menu.addAction(offset_action)
+        #offset_action.triggered.connect(lambda: show_offset_dialog(self))
 
+        # Examples
+        examples_menu = menubar.addMenu("Examples")
+        self.setup_example_menu(examples_menu)
         main_layout.setMenuBar(menubar)
 
         # ---------------- Run / Record Toolbar ----------------
@@ -179,9 +182,11 @@ class ScriptEditorApp(QWidget):
         self.editor.textChanged.connect(self.mark_modified)
 
         # ---------------- Terminal ----------------
+
+        # Terminal text area
         self.terminal = QPlainTextEdit()
         self.terminal.setReadOnly(True)
-        self.terminal.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.terminal.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.terminal.setStyleSheet("""
             QPlainTextEdit {
                 background-color: black;
@@ -190,14 +195,38 @@ class ScriptEditorApp(QWidget):
                 font-size: 13px;
             }
         """)
+
+        # Header (label + clear button)
         terminal_label = QLabel("> Terminal")
         terminal_label.setStyleSheet("padding:2px;")
         terminal_label.setFixedHeight(20)
 
+        # Clear button
+        clear_button = QPushButton("Clear")
+        clear_button.setIcon(QIcon.fromTheme("edit-clear"))
+        clear_button.setToolTip("Clear terminal")
+        clear_button.setFixedHeight(24)
+        clear_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        clear_button.setStyleSheet(self.button_style())
+
+        clear_button.clicked.connect(self.terminal.clear)
+
+
+
+        # Horizontal header layout
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(4, 0, 4, 0)
+        header_layout.setSpacing(4)
+        header_layout.addWidget(terminal_label)
+        header_layout.addStretch()  # pushes the button to the right
+        header_layout.addWidget(clear_button)
+
+        # Combine header and terminal in a vertical layout
         terminal_container = QVBoxLayout()
         terminal_container.setContentsMargins(0, 0, 0, 0)
         terminal_container.setSpacing(1)
-        terminal_container.addWidget(terminal_label)
+        terminal_container.addLayout(header_layout)
         terminal_container.addWidget(self.terminal)
 
         terminal_widget = QFrame()
@@ -254,6 +283,47 @@ class ScriptEditorApp(QWidget):
         self.proc_monitor_timer.timeout.connect(self._check_process)
 
         logger_editor.info("Editor started")
+
+
+    def setup_example_menu(self, examples_menu):
+        def _find_examples_dir():
+            from pathlib import Path
+            cur = Path(__file__).resolve().parent
+            for _ in range(6):
+                candidate = cur / "example_programs"
+                if candidate.exists() and candidate.is_dir():
+                    return candidate
+                cur = cur.parent
+            return None
+
+        def _make_loader(path):
+            def _loader(*_args):
+                try:
+                    with path.open("r", encoding="utf-8") as fh:
+                        self.editor.setPlainText(fh.read())
+                    self.current_file = None
+                    self.is_modified = False
+                    logger_editor.info(f"Loaded example: {path.name}")
+                except Exception:
+                    logger_editor.exception(f"Failed to load example {path}")
+            return _loader
+
+        examples_dir = _find_examples_dir()
+        if examples_dir:
+            files = sorted([p for p in examples_dir.iterdir() if p.is_file()], key=lambda p: p.name.lower())
+            if files:
+                for p in files:
+                    action = QAction(p.name, self)
+                    action.triggered.connect(_make_loader(p))
+                    examples_menu.addAction(action)
+            else:
+                no_action = QAction("No examples found", self)
+                no_action.setEnabled(False)
+                examples_menu.addAction(no_action)
+        else:
+            no_dir_action = QAction("No examples directory", self)
+            no_dir_action.setEnabled(False)
+            examples_menu.addAction(no_dir_action)
 
     # ---------------- Utility Methods ----------------
     def button_style(self):

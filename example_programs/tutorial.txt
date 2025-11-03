@@ -1,0 +1,47 @@
+;; EXAMPLE TO SHOW THE BASICS OF THE CLICKER PROGRAM LANGUAGE
+;; example_programs/tutorial.txt
+
+;; Prints message to terminal
+print Starting Program!
+
+;; Waiting 1 second
+wait 1 
+
+;; Moving the mouse cursor around
+move 100 500        ; Move mouse cursor to any location on the screen
+moverel 200 -200    ; Move mouse cursor relative to current position
+
+goback      ; Move mouse cursor to previous position
+goback      ; Again
+
+centermouse ; Move mouse cursor to center of the screen
+setoffset   ; From now on, the current cursor position becomes (x=0,y=0)...
+move 0 0    ; ... so this does not change the position
+clearoffset ; cancels the effects of 'setoffset'
+
+
+;; Clicking with mouse
+click       ; clicks left mouse button
+click left  ; same as above
+click right ; clicks right mouse button
+doubleclick ; doubleclick left mouse button
+
+;; Pausing execution
+pause
+
+;; Creating loops with labels and jumps
+label LOOP-x
+    moverel 10 0    ; moves 10px to the right
+    ; <-- Your custom code
+    jump LOOP-x 10  ; jumps to LOOP-x 10 times in a row
+
+;; Nested loops
+label LOOP-x
+    label LOOP-y
+        moverel 0 10    ; moves 10px down
+        wait 0.5
+        ; <-- Your custom code
+        jump LOOP-y 10
+    moverel 10 -100     ; position cursor correctly for next iteration of LOOP-y
+    jump LOOP-x 10
+    
