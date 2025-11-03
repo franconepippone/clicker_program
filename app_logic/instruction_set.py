@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Tuple, List, Any, TypedDict, cast
+from typing import Dict, Tuple, List, Any, TypedDict, cast, overload, TypeVar, Type
 from dataclasses import dataclass
 import time
 from enum import Enum
@@ -10,8 +10,7 @@ from pynput import keyboard
 
 from app_logic.virtual_machine.executor import Executor, Instruction
 
-##### Utility functions
-
+##### Utility classes
 
 class SharedRuntimeDict(TypedDict):
     """Defines the structure of the shared memory dictionary
@@ -29,14 +28,45 @@ class VarMathOperations(Enum):
     MULTIPLICATION = 'mult'
     DIV = 'div'
 
-class val_ref:
-    """Defines a reference to either a literal or a variable. 
-    the get() method returns the value pointed to."""
+class ValueRef:
+    """Descriptor that represents a reference to a literal or runtime variable."""
 
-    literal: int
+    literal: float | None
     var_name: str
+    SHARED_DICT: SharedRuntimeDict
+
+    def __init__(self, input: str):
+        s = input.strip()
+        try:
+            self.literal = float(s)
+            self.var_name = ""
+        except ValueError:
+            self.literal = None
+            self.var_name = s
     
-        
+    def __repr__(self) -> str:
+        return self.__class__.__name__ + (f"(var={self.var_name})" if self.literal is None else f"(literal={self.literal})" )
+    
+    def __call__(self) -> float:
+        return self.value
+
+    @property
+    def value(self) -> float:
+        """Return the resolved value."""
+        if self.literal is not None:
+            return self.literal
+        return _get_variable(self.SHARED_DICT, self.var_name)
+
+    @classmethod
+    def bind_shared_runtime_dict(cls, shared_dict: SharedRuntimeDict):
+        cls.SHARED_DICT = shared_dict
+
+
+## Utility memory functions
+# 
+# we could put all of these as class methods inside a class, so that the dict is not passed
+# for each call but stored in the initial one.
+# Partically equivalent to just storing the dict in a global variable
 
 def _get_variable(shared: SharedRuntimeDict, name: str) -> float:
     val = shared["vars"].get(name)
@@ -57,7 +87,6 @@ def _get_from_hystory(shared: SharedRuntimeDict) -> Tuple[int, int] | None:
 def _set_new_offset(shared: SharedRuntimeDict, pos: Tuple[int, int]):
     shared["offset"] = pos
 
-
 def _offset_point(shared: SharedRuntimeDict, point: Tuple[int, int]) -> Tuple[int, int]:
     # adds stored offset to coordinate
     return point[0] + shared["offset"][0], point[1] + shared["offset"][1]
@@ -74,11 +103,15 @@ def _pop_pc(shared: SharedRuntimeDict) -> int | None:
 def _set_safemode(shared: SharedRuntimeDict, value: bool):
     shared["safe_mode"] = value
 
-def _get_safemode(shared: Dict) -> bool:
+def _get_safemode(shared: SharedRuntimeDict) -> bool:
     return shared["safe_mode"]
 
 def _getshrdict(executor: Executor) -> SharedRuntimeDict:
     return cast(SharedRuntimeDict, executor.shared)
+
+def _point(x: int | float, y: int | float) -> Tuple[int, int]:
+    """Convert two arguments to tuple of integer representing point on screen"""
+    return int(x), int(y)
 
 ### =================================== Internal Instructions ===================================
 
@@ -92,8 +125,9 @@ class SetupAndStart(Instruction):
         shared["pc_stack"] = []    # used with call / return to remember pc
         _set_new_offset(shared, (0,0))
         shared["safe_mode"] = False
-        shared["vars"] = {}    # variables dict
+        shared["vars"] = {'x' : 3}    # variables dict
         shared["logger"] = executor.logger_internal
+        ValueRef.bind_shared_runtime_dict(shared)    # set the class variable to the shared dictionary, so all val_ref objects have access to it
 
 ### =================================== App Instructions ===================================
 
@@ -117,14 +151,14 @@ class MouseCenter(Instruction):
 class MouseMove(Instruction):
     """Moves mouse position to specified coordinate"""
 
-    x: int
-    y: int
+    x: ValueRef
+    y: ValueRef
     time: float = 0.0
 
     def execute(self, executor: Executor):
         _add_to_history(_getshrdict(executor))  # tracks history
-
-        new_pos = _offset_point(_getshrdict(executor), (self.x, self.y))
+    
+        new_pos = _offset_point(_getshrdict(executor), _point(self.x(), self.y()))
         gui.moveTo(new_pos, duration=self.time)
 
         pos = gui.position()

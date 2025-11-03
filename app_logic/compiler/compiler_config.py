@@ -2,6 +2,7 @@ from typing import Dict, Iterable, Callable
 from enum import Enum
 
 from .compiler import Compiler, SEP_SPACE, CompilationError, CompCtxDict
+from app_logic.instruction_set import ValueRef
 from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
@@ -70,7 +71,7 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
         """Configure the compiler by registering command build functions."""
 
         @compiler.command(MOVE)
-        def move_command(compiler_ctx: CompilerContextDict, x: int, y: int, t: float = 0.0) -> MouseMove:
+        def move_command(compiler_ctx: CompilerContextDict, x: ValueRef, y: ValueRef, t: float = 0.0) -> MouseMove:
             # additional logic can be added here using compiler_ctx if needed
             return MouseMove(x, y, t)
 
