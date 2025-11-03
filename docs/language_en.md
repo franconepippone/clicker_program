@@ -128,3 +128,9 @@ See *example_programs/variables.txt* for practical usage examples.
   Moves the cursor back to the previous position,  
   undoing the last movement executed with a `move` command. It can be used repeatedly to retrace the movement history.  
   Example: `goback`
+
+   
+    
+     
+      
+*This was automatically translated by ChatGPT, it might be imprecise*

@@ -1,6 +1,7 @@
-;; EXAMPLE FILE TO SHOW USAGE OF VARIABLES
+;; EXAMPLE TO SHOW USAGE OF VARIABLES
+;; example_programs/variables.txt
 
-; Basic arithmetics
+;; Basic arithmetics
 ; N.B: SPACES are important! x=3 doesn't work
 var x = 3 
 var y = 4
@@ -28,10 +29,9 @@ label loopStart
 	jump loopStart 10
 
 
-; Combining variables and move commands
+;; Combining variables and move commands
 
 ; Draws a parabula
-
 setoffset	; initializing variables
 var mouse_x = 0
 var mouse_y = 0

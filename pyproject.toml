@@ -7,6 +7,14 @@ requires-python = ">=3.13"
 dependencies = [
     "bottle>=0.13.4",
     "keyboard>=0.13.5",
+    "pip>=25.3",
     "pyautogui>=0.9.54",
     "pynput>=1.8.1",
+    "pyqt6>=6.10.0",
 ]
+
+[tool.uv]
+package = true
+
+[project.scripts]
+clickerapp = "src.main:main"
