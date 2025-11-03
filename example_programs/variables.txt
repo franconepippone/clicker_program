@@ -1,0 +1,41 @@
+;; EXAMPLE FILE TO SHOW USAGE OF VARIABLES
+
+; Basic arithmetics
+; All args must be separated by space, x=3 doesn't work
+var x = 3 
+var y = 4
+
+var out = x + y	
+printvar out
+
+var out = x - y
+printvar out
+
+var out = x * y
+printvar out
+
+var out = x / y
+printvar out
+
+
+; Loops
+
+var i = 0
+label loopStart
+	var i = i + 1
+	printvar i
+	wait .2
+	jump loopStart 10
+
+
+; Combining variables and move commands
+
+; draws a parabula
+
+setoffset
+var mouse_x = $mousex
+var mouse_y = $mousey
+
+
+
+

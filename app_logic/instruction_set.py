@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import time
 from enum import Enum
 import logging
+import re
 
 import pyautogui as gui
 from pynput import keyboard
@@ -26,7 +27,7 @@ class VarMathOperations(Enum):
     SUM = 'sum'
     DIFFERENCE = 'diff'
     MULTIPLICATION = 'mult'
-    DIV = 'div'
+    DIVISION = 'div'
 
 class ValueRef:
     """Descriptor that represents a reference to a literal or runtime variable."""
@@ -41,6 +42,9 @@ class ValueRef:
             self.literal = float(s)
             self.var_name = ""
         except ValueError:
+            # MOVED IN COMPILER_CONFIG
+            #if not _is_valid_var_name(s):
+            #    raise Exception(f"Invalid variable name: {s}")
             self.literal = None
             self.var_name = s
     
@@ -68,10 +72,28 @@ class ValueRef:
 # for each call but stored in the initial one.
 # Partically equivalent to just storing the dict in a global variable
 
+def _is_valid_var_name(name: str) -> bool:
+    """
+    Check whether a given string is a valid variable name.
+
+    A valid name must:
+    - be non-empty
+    - start with a letter (A–Z, a–z) or underscore (_)
+    - contain only letters, digits, and underscores
+    """
+    if not name or not isinstance(name, str):
+        return False
+
+    # Match: starts with letter or underscore, followed by letters/digits/underscores
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
+        return False
+    return True
+
+
 def _get_variable(shared: SharedRuntimeDict, name: str) -> float:
     val = shared["vars"].get(name)
     if val is None:
-        raise RuntimeError(f"Undefined variable {name}")
+        raise RuntimeError(f"Undefined variable '{name}'")
     return val
 
 def _set_variable(shared: SharedRuntimeDict, name: str, val: float):
@@ -125,7 +147,7 @@ class SetupAndStart(Instruction):
         shared["pc_stack"] = []    # used with call / return to remember pc
         _set_new_offset(shared, (0,0))
         shared["safe_mode"] = False
-        shared["vars"] = {'x' : 3}    # variables dict
+        shared["vars"] = {}    # variables dict
         shared["logger"] = executor.logger_internal
         ValueRef.bind_shared_runtime_dict(shared)    # set the class variable to the shared dictionary, so all val_ref objects have access to it
 
@@ -168,14 +190,14 @@ class MouseMove(Instruction):
 class MouseMoveRel(Instruction):
     """Moves mouse position by relative coordinates"""
 
-    x: int
-    y: int
+    x: ValueRef
+    y: ValueRef
     time: float = 0.0
 
     def execute(self, executor: Executor):
         _add_to_history(_getshrdict(executor))  # tracks history
 
-        gui.moveRel(self.x, self.y, self.time)
+        gui.moveRel(self.x(), self.y(), self.time)
 
 
 class MouseGoBack(Instruction):
@@ -233,10 +255,10 @@ class MouseDoubleClick(Instruction):
 class Wait(Instruction):
     """Waits the given amount of time"""
 
-    time_s: float
+    time_s: ValueRef
 
     def execute(self, executor: Executor):
-        time.sleep(self.time_s)
+        time.sleep(self.time_s())
 
 class Pause(Instruction):
     """Pauses """
@@ -254,20 +276,20 @@ class Pause(Instruction):
 
 @dataclass
 class JumpNTimes(Instruction):
-    num: int # if set to -1 do infinte jump
+    num: ValueRef       # if set to -1 do infinte jump
     jump_idx: int
     _cnt: int = 0
     jmp_name: str = "??"
 
     def execute(self, executor: Executor):
         """when jump doesnt occur, reset"""
-        if self.num <= 0:
+        if self.num() <= 0:
             # jump always if set to infinite jump
             executor.pc  =self.jump_idx - 1
             return
 
         self._cnt += 1
-        if self._cnt >= self.num:
+        if self._cnt >= self.num():
             self._cnt = 0
             return  # do not jump, loop is over
 
@@ -306,33 +328,39 @@ class Return(Instruction):
 ### --------------- VARIABLES ---------------
 
 @dataclass
-class SetVar(Instruction):
+class PrintVar(Instruction):
     var_name: str
-    val: float
 
     def execute(self, executor: Executor):
-        _set_variable(_getshrdict(executor), self.var_name, self.val)
+        val = _get_variable(_getshrdict(executor), self.var_name)
+        executor.logger_internal.info(f"{self.var_name} = {val}")
+
+
+@dataclass
+class SetVar(Instruction):
+    var_name: str
+    val: ValueRef
+
+    def execute(self, executor: Executor):
+        _set_variable(_getshrdict(executor), self.var_name, self.val())
 
 @dataclass
 class VarMath(Instruction):
     out_var_name: str
-    l_var_name: str
-    r_var_name: str
+    l_val: ValueRef
+    r_val: ValueRef
     opcode: VarMathOperations
 
     def execute(self, executor: Executor):
-        l_var: float = _get_variable(_getshrdict(executor), self.l_var_name)
-        r_var: float = _get_variable(_getshrdict(executor), self.r_var_name)
-
         match self.opcode:
             case VarMathOperations.SUM:
-                out = l_var + r_var
+                out = self.l_val() + self.r_val()
             case VarMathOperations.DIFFERENCE:
-                out = l_var - r_var
+                out = self.l_val() - self.r_val()
             case VarMathOperations.MULTIPLICATION:
-                out = l_var * r_var
-            case VarMathOperations.DIV:
-                out = l_var / r_var
+                out = self.l_val() * self.r_val()
+            case VarMathOperations.DIVISION:
+                out = self.l_val() / self.r_val()
             case _:
                 raise RuntimeError(f"Unknown var math opcode {self.opcode}")
 

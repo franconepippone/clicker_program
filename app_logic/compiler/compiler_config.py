@@ -2,7 +2,7 @@ from typing import Dict, Iterable, Callable
 from enum import Enum
 
 from .compiler import Compiler, SEP_SPACE, CompilationError, CompCtxDict
-from app_logic.instruction_set import ValueRef
+from app_logic.instruction_set import ValueRef, VarMathOperations, _is_valid_var_name
 from app_logic.instruction_set import (
     Wait,
     MouseLeftClick,
@@ -23,7 +23,8 @@ from app_logic.instruction_set import (
     Return,
     SetSafeMode,
     VarMath,
-    SetVar
+    SetVar,
+    PrintVar
 )
 
 # instruction names
@@ -48,6 +49,7 @@ class MathOperators(Enum):
     MINUS = "-"
     TIMES = "*"
     DIV = "/"
+    NO_OP = "noop"
 
 # annotated context dict (shared across command builders)
 class CompilerContextDict(CompCtxDict):
@@ -76,7 +78,7 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
             return MouseMove(x, y, t)
 
         @compiler.command(MOVEREL)
-        def move_rel_command(compiler_ctx: CompilerContextDict, x: int, y: int, t: float = 0.0) -> MouseMoveRel:
+        def move_rel_command(compiler_ctx: CompilerContextDict, x: ValueRef, y: ValueRef, t: float = 0.0) -> MouseMoveRel:
             return MouseMoveRel(x, y, t)
 
         @compiler.command(CLICK)
@@ -87,7 +89,7 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
                 return MouseLeftClick()
 
         @compiler.command(WAIT)
-        def wait_command(compiler_ctx: CompilerContextDict, t: float) -> Wait:
+        def wait_command(compiler_ctx: CompilerContextDict, t: ValueRef) -> Wait:
             return Wait(t)
 
         @compiler.command(DOUBLECLICK)
@@ -95,7 +97,7 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
             return MouseDoubleClick()
 
         @compiler.command(JUMP)
-        def jump_command(compiler_ctx: CompilerContextDict, name: str, n: int = -1) -> JumpNTimes:
+        def jump_command(compiler_ctx: CompilerContextDict, name: str, n: ValueRef = ValueRef('-1')) -> JumpNTimes:
             return JumpNTimes(n, -100, jmp_name=name)   # jmp indx assigned at post-processing
 
         @compiler.command(PRINT)
@@ -138,22 +140,49 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
         @compiler.command(CALL)
         def call_command(compiler_ctx: CompilerContextDict, name: str) -> Call:
             # -1 is there because call inherits from jumpntimes
-            return Call(-1, -100, jmp_name=name)   # jmp indx assigned at post-processing
+            return Call(ValueRef('-1'), -100, jmp_name=name)   # jmp indx assigned at post-processing
 
         @compiler.command(RETURN)
         def return_command(compiler_ctx: CompilerContextDict) -> Return:
             return Return()
+        
+        @compiler.command('printvar')
+        def printvar_command(compiler_ctx: CompilerContextDict, name: str) -> PrintVar:
+            return PrintVar(name)
 
         @compiler.command('var')
         def var_command(
             compiler_ctx: CompilerContextDict, 
             target_name: str, 
             action: str, 
-            left_val: float, 
-            operation: MathOperators | None = None,
-            right_val: float  = -1
+            left_val: ValueRef, 
+            operation: MathOperators = MathOperators.NO_OP,
+            right_val: ValueRef  = ValueRef("-1")
         ) -> VarMath | SetVar:
-            pass
+            
+            comm = (target_name, action, left_val, operation, right_val)
+            if not _is_valid_var_name(target_name):
+                raise CompilationError(-1, f"Invalid variable name: '{target_name}'")
+
+            match comm:
+                case (str() as target, "=", left, MathOperators.NO_OP, _):
+                    return SetVar(target, left)
+                
+                case (str() as target, "=", left, MathOperators.PLUS, right):
+                    
+                    return VarMath(target, left, right, VarMathOperations.SUM)
+                
+                case (str() as target, "=", left, MathOperators.MINUS, right):
+                    return VarMath(target, left, right, VarMathOperations.DIFFERENCE)
+                
+                case (str() as target, "=", left, MathOperators.DIV, right):
+                    return VarMath(target, left, right, VarMathOperations.DIVISION)
+                
+                case (str() as target, "=", left, MathOperators.TIMES, right):
+                    return VarMath(target, left, right, VarMathOperations.MULTIPLICATION)
+                
+                case _:
+                    raise CompilationError(-1, "Wrong usage of 'var' command")
 
             
     

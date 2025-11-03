@@ -188,9 +188,9 @@ class Compiler:
                 if isinstance(value, str) and typ is not str:
                     try:
                         return typ(value)
-                    except Exception:
+                    except Exception as e:
                         # optionally log casting error here
-                        raise ValueError(f"Cannot cast value '{value}' to type {typ}")
+                        raise ValueError(' '.join(e.args))
                     
                 return value
 

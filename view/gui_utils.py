@@ -44,7 +44,7 @@ KEYWORDS_ORANGE = [
 ]
 
 KEYWORDS_PURPLE = [
-    "var"
+    "var", "printvar"
 ]
 
 class ScriptHighlighter(QSyntaxHighlighter):
