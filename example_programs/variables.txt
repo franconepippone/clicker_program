@@ -31,10 +31,9 @@ label loopStart
 
 ;; Combining variables and move commands
 
-; Draws a parabula
-setoffset	; initializing variables
-var mouse_x = 0
-var mouse_y = 0
+; Moves the mouse in a parabula shape
+var mouse_x = $MOUSE_X ; initializing variables
+var mouse_y = $MOUSE_Y
 var y_vel = -30
 
 label drawStart
@@ -42,8 +41,8 @@ label drawStart
 	var mouse_y = mouse_y + y_vel
 	var y_vel = y_vel + 2		; Decreases velocity, acts like gravity
 	
-	;move mouse_x mouse_y
-	call drawStart
+	move mouse_x mouse_y
+	jump drawStart 30
 
 
 

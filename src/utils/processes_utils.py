@@ -65,7 +65,7 @@ class ProcessDialog(QtWidgets.QDialog):
 
         # Message label
         self.label = QtWidgets.QLabel(window_message, self)
-        self.label.setStyleSheet("font-size: 10pt;")
+        #self.label.setStyleSheet("font-size: 10pt;")
         self.label.setWordWrap(True)
         self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter) 
         layout.addWidget(self.label)

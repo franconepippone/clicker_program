@@ -9,7 +9,8 @@ from PyQt6.QtGui import (
     QTextCharFormat,
     QSyntaxHighlighter,
     QTextFormat,
-    QPaintEvent
+    QPaintEvent,
+    QPalette
 )
 from PyQt6.QtWidgets import (
     QWidget,
@@ -111,7 +112,6 @@ class ScriptHighlighter(QSyntaxHighlighter):
         if comment_index >= 0:
             self.setFormat(comment_index, len(text) - comment_index, self.comment_format)
 
-
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -120,8 +120,8 @@ class LineNumberArea(QWidget):
     def sizeHint(self) -> QSize:
         return QSize(self.code_editor.line_number_area_width(), 0)
 
-    def paintEvent(self, a0: QPaintEvent | None) -> None:
-        self.code_editor.line_number_area_paint_event(a0)
+    def paintEvent(self, event: QPaintEvent) -> None:
+        self.code_editor.line_number_area_paint_event(event)
 
 
 class CodeEditor(QPlainTextEdit):
@@ -133,14 +133,11 @@ class CodeEditor(QPlainTextEdit):
         self.setStyleSheet("""
             QPlainTextEdit {
                 font-family: Consolas, monospace;
-                font-size: 14px;
                 border: 1px solid #ccc;
-                background-color: #fdfdfd;
             }
         """)
 
         self.line_number_area = LineNumberArea(self)
-
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 5)
 
         # Signals for updating line numbers when needed
@@ -179,17 +176,28 @@ class CodeEditor(QPlainTextEdit):
 
     def line_number_area_paint_event(self, event):
         painter = QPainter(self.line_number_area)
-        painter.fillRect(event.rect(), QColor("#f0f0f0"))
 
+        # Get the OS / current palette window color
+        bg_color = self.palette().color(QPalette.ColorRole.Window)
+
+        # Apply a slightly transparent gray overlay
+        overlay = QColor(200, 200, 200, 50)  # RGBA: light gray, 50/255 transparency
+        # Mix colors manually: QPainter can do this using composition
+        painter.fillRect(event.rect(), bg_color)
+        painter.fillRect(event.rect(), overlay)
+
+        # Paint line numbers
         block = self.firstVisibleBlock()
         block_number = block.blockNumber()
         top = int(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
         bottom = top + int(self.blockBoundingRect(block).height())
 
+        text_color = self.palette().color(QPalette.ColorRole.Text)
+        painter.setPen(text_color)
+
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(block_number + 1)
-                painter.setPen(Qt.GlobalColor.gray)
                 painter.drawText(
                     0, top, self.line_number_area.width() - 4,
                     self.fontMetrics().height(),
@@ -200,6 +208,7 @@ class CodeEditor(QPlainTextEdit):
             bottom = top + int(self.blockBoundingRect(block).height())
             block_number += 1
 
+
     # --- Highlight current line ---
 
     def highlight_current_line(self):
@@ -207,11 +216,18 @@ class CodeEditor(QPlainTextEdit):
 
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            lineColor = QColor("#e8f2ff")
+            
+            # Semi-transparent color: alpha controls opacity
+            lineColor = QColor(100, 150, 255, 50)  # light blue, 50/255 alpha
             selection.format.setBackground(lineColor)
+            
+            # Make sure it highlights the full width
             selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+
+            # Apply to the current cursor line
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
+
             extraSelections.append(selection)
 
         self.setExtraSelections(extraSelections)

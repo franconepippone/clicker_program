@@ -14,7 +14,8 @@ from PyQt6.QtWidgets import (
 from logging.handlers import QueueListener
 
 from .gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, show_offset_dialog
-
+from .settings_dialog import SettingsDialog
+from .settings import Settings
 
 # ----------------------
 # Logging setup
@@ -44,6 +45,11 @@ class TerminalLogHandler(QObject, logging.Handler):
         self.new_log.connect(self._append_to_terminal)
 
     def _append_to_terminal(self, msg: str, level: int) -> None:
+        
+        # dont do anything if debug msg prints are disabled
+        if level == logging.DEBUG and not Settings.print_debug_msg:
+            return
+
         # Choose color based on log level
         color_map = {
             logging.DEBUG: "#7E7E7E",
@@ -96,9 +102,11 @@ class ScriptEditorApp(QWidget):
 
         # Add visual separation: light gray background and borders
         menubar.setStyleSheet("""
+            /* Top-level menu bar */
             QMenuBar {
-                background-color: #f5f5f5;
-                border-bottom: 1px solid #c0c0c0;
+                background-color: palette(window);
+                color: palette(window-text);
+                border-bottom: 1px solid rgba(255, 255, 255, 30);
             }
             QMenuBar::item {
                 spacing: 6px;
@@ -107,9 +115,31 @@ class ScriptEditorApp(QWidget):
                 border-radius: 4px;
             }
             QMenuBar::item:selected {
-                background: #dcdcdc;
+                background-color: rgba(150, 150, 150, 30);
+            }
+
+            /* Dropdown menus */
+            QMenu {
+                background-color: palette(window);
+                color: palette(window-text);
+                border: 1px solid rgba(0, 0, 0, 30);
+                padding: 4px 0;
+            }
+            QMenu::item {
+                padding: 4px 20px;         /* standard menu item padding */
+                background: transparent;
+            }
+            QMenu::item:selected {
+                background-color: rgba(150, 150, 150, 30);
+            }
+            QMenu::separator {
+                height: 1px;
+                background: rgba(0, 0, 0, 20);
+                margin: 4px 0;
             }
         """)
+
+
 
         # File menu
         file_menu = menubar.addMenu("&File")
@@ -133,7 +163,10 @@ class ScriptEditorApp(QWidget):
 
         # Preferences menu
         options_menu = menubar.addMenu("Preferences")
-        options_menu.addAction("Settings...")
+        settings_action = QAction("Settings...", self)
+        options_menu.addAction(settings_action)
+        settings_action.triggered.connect(self.open_settings_dialog)
+
         options_menu.addAction("Appearance...")
 
         # Script Tools menu
@@ -160,7 +193,7 @@ class ScriptEditorApp(QWidget):
         self.record_btn.setToolTip("Record session")
 
         # Create "Run in Safe Mode" checkbox
-        self.safe_mode_checkbox = QCheckBox("Run in safe mode")
+        self.safe_mode_checkbox = QCheckBox(" Run in safe mode")
         self.safe_mode_checkbox.setToolTip("Disables all mouse click commands, only do movement")
         self.safe_mode_checkbox.setChecked(False)
 
@@ -191,7 +224,6 @@ class ScriptEditorApp(QWidget):
                 background-color: black;
                 color: #f0f0f0;
                 font-family: Consolas, monospace;
-                font-size: 13px;
             }
         """)
 
@@ -281,7 +313,31 @@ class ScriptEditorApp(QWidget):
         self.proc_monitor_timer = QTimer(self)
         self.proc_monitor_timer.timeout.connect(self._check_process)
 
+        Settings.load_from_file()
+        self.update_settings()
+
         logger_editor.info("Editor started")
+    
+    def update_settings(self):
+        self.update_all_widget_fonts(self, Settings.text_size)
+    
+    def open_settings_dialog(self):
+        """Show the settings dialog"""
+        logger_editor.debug("Opened settings dialog")
+        dialog = SettingsDialog(self, self.update_settings)  # parent = main window
+        if dialog.exec():               # exec() blocks until dialog is closed
+            pass
+
+        logger_editor.debug("Closed settings")
+   
+    
+    def update_all_widget_fonts(self, widget, size):
+        font = widget.font()
+        font.setPointSize(size)
+        widget.setFont(font)
+
+        for child in widget.findChildren(QWidget):
+            self.update_all_widget_fonts(child, size)
 
 
     def setup_example_menu(self, examples_menu):
@@ -332,12 +388,14 @@ class ScriptEditorApp(QWidget):
                 padding: 4px 10px;
                 border: 1px solid #aaa;
                 border-radius: 6px;
-                background-color: #f5f5f5;
+                background-color: palette(button);
+                color: palette(button-text);
             }
             QPushButton:hover {
-                background-color: #eaeaea;
+                background-color: rgba(150, 150, 150, 30);  /* semi-transparent overlay */
             }
         """
+
     
     # ==========================================================
     # script save / load methods
@@ -404,6 +462,9 @@ class ScriptEditorApp(QWidget):
 
     def run_script(self):
         code_src = self.editor.toPlainText()
+        if Settings.clear_terminal_on_run:
+            self.terminal.clear()
+
         logger_exec.info("Running script...")
 
         from app_logic.virtual_machine.executor_process import begin_compile_and_execute_process
@@ -458,7 +519,7 @@ class ScriptEditorApp(QWidget):
                             cursor = self.editor.textCursor()
                             cursor.beginEditBlock()
                             # Move to end of the current line, then try to move to the next block (next line)
-                            cursor.movePosition(cursor.EndOfLine)
+                            cursor.movePosition(QTextCursor.MoveOperation.End)
                             cursor.insertText("\n" + msg + "\n")
                             cursor.endEditBlock()
                             # update editor cursor to reflect the insertion
