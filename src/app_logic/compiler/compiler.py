@@ -38,10 +38,10 @@ class Compiler:
     - Lines are preprocessed (comments removed, whitespace normalized) and split into
         a command and argument string.
     - Registered command builders (via the `command` decorator) are responsible for
-        producing Instruction instances or performing compile-time actions (e.g. labels).
-    - A shared compilation context dictionary is provided to builders for cross-line
+        producing Instruction instances or performing compile-time actions (e.g. registering labels).
+    - A shared compilation context dictionary is provided to builders for a shared state
         state (e.g. resolved labels, variables).
-    - Initial instructions can be set and are prepended to every compilation.
+    - A set of Initial instructions can be set during configuration and will be prepended to every compilation.
     - An optional post-processing pass can transform or validate the final instruction list.
 
     Main behavior
@@ -50,21 +50,35 @@ class Compiler:
     - generate_instructions(lines): produce a list of Instructions from source lines;
         logs and returns None on CompilationError.
     - compile_from_src(src_text) / compile_from_file(filepath): helpers that run the full
-        compile pipeline and the optional post-process pass.
-    - command(command_name, arg_sep=...): decorator that registers a builder function.
+        compilation pipeline.
+    - command(command_name: str, arg_sep=...): decorator that registers a builder function.
         The decorator auto-parses and casts string arguments to annotated types and binds
         defaults, passing the shared compilation context as the first parameter.
+        arg_sep is the space character by default, but can be overwritten.
     - postprocess(func): register a post-processing function (can also be used as a decorator).
 
     Error handling
-    - Compilation errors raised by builders are reported with source line information.
     - generate_instructions and compile helpers return None on failure.
+    
+    Logging
+    - the compiler logs all actions to the "Compiler" logger, obtainable by `logging.getLogger("Compiler")`
 
-    Notes
+    About command builders
     - Command builders must accept the compilation context as their first parameter
         and return an Instruction or perform compile-time state changes.
     - The automatic argument casting uses type annotations from the builder function
         signature and will raise ValueError if casting fails.
+
+    Example of a command builder:
+    ```
+    def configure_compiler(compiler: Compiler):
+        ...
+        @compiler.command('add')
+        def add_command_builder(compiler_ctx: dict, x: int, y: int) -> AddInstruction:
+            # additional logic or interaction with compiler_ctx
+            return AddInstruction(x, y) # AddInstruction is a subclass of Instruction
+        
+    ```
     """
 
 
@@ -147,7 +161,10 @@ class Compiler:
         """Gets latest compiled instructions"""
         return self.instructions
 
-    def compile_from_src(self, src_text: str):
+    def compile_from_src(self, src_text: str) -> List[Instruction] | None:
+        """Compile from source code text string. Returns a list of instruction,
+        or None if compilation fails
+        """
         inst_list = self.generate_instructions(src_text.splitlines())
         if inst_list is None:
             return
@@ -164,6 +181,9 @@ class Compiler:
         return inst_list
 
     def compile_from_file(self, filepath: str) -> List[Instruction] | None:
+        """Compile from source text file. Returns a list of instruction,
+        or None if compilation fails
+        """
         with open(filepath, "r") as f:
             src_text = f.read()
         
@@ -175,7 +195,9 @@ class Compiler:
         return func
 
     def command(self, command_name: str, arg_sep: str = SEP_SPACE) -> Callable:
-        """Decorator to register a command builder with automatic type casting."""
+        """Decorator to register a command builder. Refer to the main docstring of this class
+        for more info about usage of command builders
+        """
 
         def decorator(func: Callable) -> Callable:
             sig = inspect.signature(func)
@@ -226,12 +248,13 @@ if __name__ == "__main__":
     import utils.logger_config    # to load configs
 
     with open("program.txt", "r") as f:
-        text_lines = [line for line in f]
+        text_lines = f.read()
 
     comp = Compiler()
-    s = comp._preprocess_line(" \t\t    ")
-
-    comp.generate_instructions(text_lines)
-
+    program = comp.compile_from_src(text_lines)
+    if not program:
+        print("compilation failed")
+        quit()
+        
     for inst in comp.get_instructions():
         print(inst)

@@ -34,23 +34,37 @@ class VarMathOperations(Enum):
     DIVISION = 'div'
 
 class ValueRef:
-    """Descriptor that represents a reference to a literal or runtime variable."""
+    """
+    Represents a reference to a literal or runtime float|int variable.  
+
+    Pass either a string or a float|int on initialization; if the string can be successfully
+    parsed into a number or a number is give, stores a literal value, otherwise, assume
+    the string name is a reference to a runtime variable located in the shared dict.  
+    
+    Call the object to get the referenced value.
+    """
 
     literal: float | None
     var_name: str
     SHARED_DICT: SharedRuntimeDict
 
-    def __init__(self, input: str):
-        s = input.strip()
-        try:
-            self.literal = float(s)
-            self.var_name = ""
-        except ValueError:
-            # MOVED IN COMPILER_CONFIG
-            #if not _is_valid_var_name(s):
-            #    raise Exception(f"Invalid variable name: {s}")
-            self.literal = None
-            self.var_name = s
+    def __init__(self, input: str | float):
+        if isinstance(input, (float, int)):
+            self.literal = input
+            return
+        elif isinstance(input, str):
+            s = input.strip()
+            try:
+                self.literal = float(s)
+                self.var_name = ""
+            except ValueError:
+                # MOVED IN COMPILER_CONFIG
+                #if not _is_valid_var_name(s):
+                #    raise Exception(f"Invalid variable name: {s}")
+                self.literal = None
+                self.var_name = s
+        else:
+            raise RuntimeError("ValueRef was initialized with a neither string / float value")
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + (f"(var={self.var_name})" if self.literal is None else f"(literal={self.literal})" )

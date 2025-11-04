@@ -1,5 +1,13 @@
 import re
 
+"""
+DEPRECATED FILE
+
+This file was ment to store functions for some editor utilities,
+but this feature was eventually removed.
+
+We keep the file just in case.
+"""
 
 def add_offset_to_move_commands(script_lines, x_offset, y_offset):
 

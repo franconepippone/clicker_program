@@ -8,7 +8,7 @@ A software (auto-clicker / click automation tool) for automating mouse cursor op
 ---
 
 ## Overview
-The Clicker Program includes a lightweight custom scripting language designed specifically for mouse automation. The language allows users to write simple, readable scripts that can control cursor movements, perform mouse clicks, define and manipulate variables, and execute conditional or loop-like logic using assembly-like commands such as `jump`, `call`, and `return`.
+The Clicker Program includes a lightweight custom scripting language designed specifically for mouse automation. The language allows users to write simple, readable scripts that can control cursor movements, perform mouse clicks, define and manipulate variables, and execute loop-like logic using assembly-like commands such as `jump`, `call`, and `return`.
 
 From the GUI, two main operations are available:
 
@@ -79,5 +79,5 @@ If on Windows, double-click the provided `run_win.vbs` script to launch the appl
 
 - This software is intended for **personal use only**.  
   Use it at your own risk for any serious or production scenarios.
-- The GUI part of the code was heavily assisted by AI generation and might not strictly follow standard Python or coding conventions and best practices.
+- The GUI part of the code was heavily assisted by AI generation and might not follow standard Python or coding conventions and best practices.
 

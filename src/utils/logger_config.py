@@ -1,5 +1,10 @@
 import logging
 
+"""
+The purpose of this file is to configure all loggers used across the whole python application.
+One this module is imported, the loggers get properly configured 
+"""
+
 
 # Add a console handler
 ch = logging.StreamHandler()

@@ -1,28 +1,28 @@
 # Clicker Program
 
-Un software (auto-clicker / strumento di automazione dei click) per automatizzare le operazioni del cursore del mouse, controllato interamente tramite un’interfaccia grafica (GUI).
+Un software (auto-clicker / strumento di automazione dei click) per automatizzare le operazioni svolte con il cursore del mouse, controllato interamente tramite un’interfaccia grafica (GUI).
 
 ---
 
 ## Panoramica
 
-Il Clicker Program include un linguaggio di scripting personalizzato, leggero e progettato appositamente per l’automazione del mouse.  
-Questo linguaggio consente di scrivere script semplici e leggibili che possono controllare i movimenti del cursore, eseguire click del mouse, definire e manipolare variabili ed eseguire logiche condizionali o cicliche utilizzando comandi di simili ad assembly come `jump`, `call` e `return`.
+Il software include un linguaggio di scripting personalizzato, leggero e progettato appositamente per l’automazione del mouse.  
+Questo linguaggio consente di scrivere script semplici e leggibili che possono controllare i movimenti del cursore, eseguire click del mouse, definire e manipolare variabili ed eseguire logiche cicliche utilizzando comandi ispirati ad assembly come `jump`, `call` e `return`.
 
 Dall’interfaccia grafica sono disponibili due operazioni principali:
 
 - **Run (Esegui)** — Esegue lo script corrente.  
   - Include una modalità **Safe Mode**, che disabilita i click del mouse, consentendo solo la simulazione dei movimenti del cursore.
-- **Record (Registra)** — Registra una sequenza di azioni del mouse e inserisce automaticamente le istruzioni corrispondenti nell’editor.  
+- **Record (Registra)** — Registra una sequenza di azioni del mouse e inserisce automaticamente i comandi corrispondenti nell’editor.  
   - Premendo il **pulsante centrale del mouse** (rotellina) viene registrato solo un comando di movimento, senza click.
 
-Per un elenco completo e dettagliato dei comandi del linguaggio di scripting, consultare la [Command Reference](docs/language_it.md).
+Per un elenco completo e dettagliato dei comandi del linguaggio di scripting, consultare la [Command Reference](docs/linguaggio_it.md).
 
 ---
 
 ## Installazione
 
-**Requisiti:**  
+**Prerequisiti:**  
  - Python **3.8+**  
  - **pip** (gestore pacchetti Python)
 
@@ -76,6 +76,6 @@ Se sei su Windows, puoi anche fare doppio click sul file `run_win.vbs` per avvia
 
 - Questo software è destinato all’**uso personale**.  
   L’utilizzo in contesti professionali o critici è a tuo rischio.
-- La parte del codice relativa alla GUI è stata sviluppata con un ampio supporto di strumenti di intelligenza artificiale generativa (GPT) e potrebbe non aderire pienamente alle convenzioni standard di programmazione Python o alle buone pratiche di sviluppo.
+- La parte del codice relativa alla GUI è stata sviluppata con un ampio supporto di strumenti di intelligenza artificiale generativa (GPT) e potrebbe non aderire alle convenzioni standard di programmazione / Python o alle buone pratiche di scrittura di codice.
 
 ---

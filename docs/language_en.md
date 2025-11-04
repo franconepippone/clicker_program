@@ -4,9 +4,9 @@ This document provides a complete reference for all commands available in the in
 The general command syntax is:  
  **`<command>`**` <param1> <param2> ...`  
 where command parameters are separated by spaces.  
-Optional parameters are shown in curly braces `{}` — **do not** include these braces in your code.
+Optional parameters are shown in curly braces `{}` in this document only — **do not** include these braces in your code.
 
-Comments begin with `;`. Everything after `;` on the same line is ignored by the interpreter.  
+Comments begin with `;`. Everything after `;` on the same line is ignored by the compiler.  
 Example:  
 `wait 1 ; waits for 1 second`
 
@@ -29,13 +29,13 @@ Example:
 ## 🖱️ Click Commands
 
 - **click** `{button}`  
-  Performs a mouse click at the current pointer position.  
+  Performs a mouse click at the current cursor position.  
   `{button}` may be `left` or `right`.  
   If omitted, the left button is used by default.  
   Examples: `click`, `click right`, `click left`
 
 - **doubleclick**  
-  Performs a double-click at the current pointer position.  
+  Performs a double-click at the current cursor position.  
   Example: `doubleclick`
 
 ---
@@ -60,7 +60,7 @@ Example:
 - **jump** `<label> {<n>}`  
   Jumps to the specified label.  
   If `{n}` is provided, the jump will be executed up to `{n}` times.  
-  Once the jump limit is reached, execution continues normally, but the command can be used again later.  
+  Once the jump limit is reached, the jump will fail, but if the same instruction is hit again, it will behave exactly like if it was hit for the first time (can be used to make nested loops).  
   Examples: `jump start_loop`, `jump start_loop 20`
 
 - **call** `<label>`  
@@ -71,7 +71,7 @@ Example:
 - **return**  
   Returns program execution to the point immediately after the corresponding **call** command.  
   **Note:** each **call** must have a matching **return** for correct execution.  
-  See *example_programs/functions.txt* for practical examples.
+  See *example_programs/functions.txt* for code examples.
 
 ---
 
@@ -88,12 +88,7 @@ All variable operations are handled through the **var** command:
   Supported operations: `+`, `-`, `*`, `/`.  
   Examples: `var x = x + 1`, `var x = y * z`
 
-There are also special global read-only variables (prefixed with `$`) that cannot be modified, but can be copied into normal variables:
-- `$MOUSE_X` — current mouse X coordinate  
-- `$MOUSE_Y` — current mouse Y coordinate  
-- `$OFFSET_X` — X offset applied via **setoffset**  
-- `$OFFSET_Y` — Y offset applied via **setoffset**
-
+\
 Most commands that accept numeric parameters (such as `move`, `moverel`, `jump`, `wait`) also accept variables as arguments.  
 Examples:
 - `move x y`  
@@ -101,6 +96,14 @@ Examples:
 - `moverel 50 y_increment`  
 
 Here, **x**, **y**, **PAUSE_SECS**, and **y_increment** are variables defined earlier in the script.  
+
+\
+There are also special global read-only variables (prefixed with `$`) that can only be assigned to other variables or referenced in commands:
+- `$MOUSE_X` — current mouse X coordinate  
+- `$MOUSE_Y` — current mouse Y coordinate  
+- `$OFFSET_X` — X offset applied via **setoffset**  
+- `$OFFSET_Y` — Y offset applied via **setoffset**
+
 
 See *example_programs/variables.txt* for practical usage examples.
 
@@ -129,8 +132,3 @@ See *example_programs/variables.txt* for practical usage examples.
   undoing the last movement executed with a `move` command. It can be used repeatedly to retrace the movement history.  
   Example: `goback`
 
-   
-    
-     
-      
-*This was automatically translated by ChatGPT, it might be imprecise*

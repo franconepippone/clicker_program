@@ -27,22 +27,7 @@ from app_logic.instruction_set import (
     PrintVar
 )
 
-# instruction names
-MOVE = "move"
-MOVEREL = "moverel"
-CLICK = "click"
-WAIT = "wait"
-DOUBLECLICK = "doubleclick"
-JUMP = "jump"
-CALL = "call"
-RETURN = "return"
-PRINT = "print"
-CENTERMOUSE = "centermouse"
-PAUSE = "pause"
-GOBACK = "goback"
-SETOFFSET = "setoffset"
-CLEAROFFSET = "clearoffset"
-LABEL = "label"
+from app_logic.instruction_names import *
 
 class MathOperators(Enum):
     PLUS = "+"
@@ -70,7 +55,11 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
     """Returns a parametrized configuration function for the compiler"""
 
     def configure_compiler(compiler: Compiler) -> None:
-        """Configure the compiler by registering command build functions."""
+        """Configure the compiler by registering command build functions.
+        This can either be used by passing a compiler object explicitly,
+        or can optionally be passed to the __init__ method of Compiler:
+        > cmp = Compiler(configure_compiler)
+        """
 
         @compiler.command(MOVE)
         def move_command(compiler_ctx: CompilerContextDict, x: ValueRef, y: ValueRef, t: float = 0.0) -> MouseMove:
@@ -146,11 +135,11 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
         def return_command(compiler_ctx: CompilerContextDict) -> Return:
             return Return()
         
-        @compiler.command('printvar')
+        @compiler.command(PRINTVAR)
         def printvar_command(compiler_ctx: CompilerContextDict, name: str) -> PrintVar:
             return PrintVar(name)
 
-        @compiler.command('var')
+        @compiler.command(VAR)
         def var_command(
             compiler_ctx: CompilerContextDict, 
             target_name: str, 
@@ -199,7 +188,7 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
 
             return instructions
 
-        init_insts: list[Instruction] = [SetupAndStart()]
+        init_insts: list[Instruction] = [SetupAndStart(), Wait(ValueRef(.5))]    # waits a bit to let the dialog startup properly
         if safemode:
             init_insts.append(SetSafeMode(True))
         

@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Callable, Iterable
-import re
 import logging
+from datetime import datetime
 
 from app_logic.virtual_machine.executor import Instruction
 from app_logic.instruction_set import (
@@ -20,36 +20,28 @@ from app_logic.instruction_set import (
     ClearMouseOffset
 )
 
+from app_logic.instruction_names import *
+
+
 logger = logging.getLogger("Decompiler")
 
 
-MOVE = "move"
-MOVEREL = "moverel"
-CLICK = "click"
-WAIT = "wait"
-DOUBLECLICK = "doubleclick"
-JUMP = "jump"
-PRINT = "print"
-CENTERMOUSE = "centermouse"
-PAUSE = "pause"
-GOBACK = "goback"
-SETOFFSET = "setoffset"
-CLEAROFFSET = "clearoffset"
-LABEL = "label"
-
-
 class Decompiler:
+    """Decompiles an instruction list into source code in the clicker scripting language.
+    Not much work has been done to make this class flexible like the Compiler class, as it's usage is very limited up
+    to now
+    """
 
     INSTRUCTION_TABLE: Dict[type, Callable[..., str] | None]
 
     def __init__(self) -> None:
 
-        def _dcp_move(i: MouseMove) -> str: return f"{MOVE} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
-        def _dcp_moverel(i: MouseMoveRel) -> str: return f"{MOVEREL} {i.x} {i.y} {str(i.time) if i.time > 0 else ''}"
+        def _dcp_move(i: MouseMove) -> str: return f"{MOVE} {i.x()} {i.y()} {str(i.time) if i.time > 0 else ''}"
+        def _dcp_moverel(i: MouseMoveRel) -> str: return f"{MOVEREL} {i.x()} {i.y()} {str(i.time) if i.time > 0 else ''}"
         def _dcp_click_left(i: MouseLeftClick) -> str: return f"{CLICK} left"
         def _dcp_click_right(i: MouseRightClick) -> str: return f"{CLICK} right"
         def _dcp_doubleclick(i: MouseDoubleClick) -> str: return DOUBLECLICK
-        def _dcp_wait(i: Wait) -> str: return f"{WAIT} {i.time_s}"
+        def _dcp_wait(i: Wait) -> str: return f"{WAIT} {i.time_s()}"
         def _dcp_waitinput(i: Pause) -> str: return PAUSE
         def _dcp_jump(i: JumpNTimes) -> str: return f"{JUMP} {i.jmp_name}"
         def _dcp_print(i: ConsolePrint) -> str: return f"{PRINT} {i.msg}"
@@ -81,7 +73,7 @@ class Decompiler:
         """
         src: List[str] = [
             "; Decompiled source code",
-            "; Generated automatically by Mouse Recorder",
+            f"; Generated automatically by Mouse Recorder | {datetime.now().strftime("%m-%d %H:%M:%S")}",
             ""
         ]
 

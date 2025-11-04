@@ -4,7 +4,7 @@ Questo documento riassume tutti i comandi del linguaggio di programmazione integ
  **`<comando>`**` <param1> <param2> ...`,  
  dove i parametri dei comandi sono separati da spazi. Su questo documento, i parametri **opzionali** sono indicati tra parentesi graffe `{}` — **non** vanno scritte nel codice.
 
-I commenti si scrivono con `;`: tutto ciò che segue su quella riga verrà ignorato.  
+I commenti si scrivono con `;`, tutto ciò che segue su quella riga verrà ignorato.  
 Esempio:  
 `wait 1 ; attende 1 secondo`
 
@@ -20,7 +20,7 @@ Esempio:
 - **moverel** `<dx> <dy> {<t>}`  
   Sposta il mouse relativamente alla posizione attuale `(dx, dy)`.  
   Il parametro opzionale `{t}` indica la durata in secondi del movimento.  
-  Esempio: `moverel 50 0 0.2`
+  Esempio: `moverel 50 0 1.5`
 
 ---
 
@@ -58,16 +58,16 @@ Esempio:
 - **jump** `<label> {<n>}`  
   Salta all’etichetta specificata.  
   Se `{n}` è indicato, il salto verrà eseguito fino a `{n}` volte.  
-  Dopo aver raggiunto l’n-esimo salto, l’esecuzione prosegue normalmente, ma il comando potrà essere usato di nuovo in seguito.  
+  Dopo aver raggiunto l’n-esimo salto, il prossimo salto fallirà e l'esecuzione passerà oltre; tuttavia, qualora la stessa istruzione di salto dovesse essere rieseguita (ad esempio tramite configurazione di cicli annidati), il salto verrà resettato e si comporterà come se fosse stato appena incontrato, nella modalità descritta in precedenza (**n** salti).  
   Esempi: `jump inizio_ciclo`, `jump inizio_ciclo 20`
 
 - **call** `<label>`  
   Salta incondizionatamente all’etichetta indicata, ricordando il punto nel programma da cui è stato chiamato.  
-  Insieme al comando **return**, permette di simulare chiamate di funzione.  
+  Insieme al comando **return**, permette di simulare chiamate a funzioni.  
   Esempio: `call funzione_click`
 
 - **return**  
-  Restituisce il controllo al punto in cui era stato eseguito il corrispondente **call**; in altre parole, ritorna ad eseguire il programma dal punto in cui era stato effettuato il salto con un **call**.  
+  Restituisce il controllo al punto del programma in cui era stato eseguito il corrispondente **call**; in altre parole, ritorna ad eseguire il programma dal punto subito dopo in cui era stato effettuato il salto con un **call**.  
   **Nota:** per il corretto funzionamento, ogni **call** deve corrispondere a un **return**.  
   Consulta *example_programs/functions.txt* per esempi pratici.
 
@@ -84,21 +84,21 @@ Tutte le funzionalità inerenti alle variabili sono unificate nel comando **var*
   Esegue un operazione matematica fra i due valori inseriti (come nel caso precedente, possono essere sia "letterali" sia riferimenti a altre variabili). Le operazioni possibili sono `+`, `-`, `*`, `/`.
   Esempio: `var x = x + 1`, `var x = y * z`
 
+La maggior parte dei comandi che accettano dei numeri come parametri (es.: `move`, `moverel`, `jump`, `wait`) supportano il passaggio di variabili. Esempi:
+- `move x y`  
+- `wait PAUSE_SECS`
+- `moverel 50 incremento_y`  
+dove **x**, **y**, **PAUSE_SECS**, **incremento_y** sono tutte variabili definite in una porzione precedente del codice.  
 
-Esistono delle variabili globali speciali di sola lettura, che non possono essere modificate ma solo copiate in altre variabili. Sono prefissate dal carattere `$`:
+Esistono delle variabili globali speciali di sola lettura, che possono essere copiate in altre variabili o utilizzate in comandi. Sono prefissate dal carattere `$`:
 - `$MOUSE_X` coordinata x del mouse
 - `$MOUSE_Y` coordinata y del mouse
 - `$OFFSET_X` offset applicato sulla coordinata x (generato con **setoffset**)
 - `$OFFSET_Y` offset applicato sulla coordinata y
 
-La maggior parte dei comandi che accettano dei numeri come parametri (es.: `move`, `moverel`, `jump`, `wait`) supportano il passaggio di variabili. Esempi:
-- `move x y`  
-- `wait PAUSE_SECS`
-- `moverel 50 incremento_y`  
 
-dove **x**, **y**, **PAUSE_SECS**, **incremento_y** sono tutte variabili definite in una porzione precedente del codice.  
 
-Consulta *example_programs/variables.txt* per esempi pratici.
+Consulta *example_programs/variables.txt* per esempi di codice.
 
 ---
 

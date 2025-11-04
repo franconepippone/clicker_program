@@ -3,6 +3,7 @@ import time
 
 from pynput import mouse, keyboard
 
+from app_logic.instruction_set import ValueRef
 from app_logic.instruction_set import (
     Instruction,
     Wait,
@@ -20,7 +21,8 @@ logger = logging.getLogger("Recorder")
 # ================================
 
 class Recorder:
-    """Records user mouse/keyboard actions into a list of Instruction objects"""
+    """Records user mouse actions into a list of Instruction objects.
+    Logs """
 
     DOUBLE_CLICK_THRESHOLD = .25    #seconds
 
@@ -41,7 +43,9 @@ class Recorder:
         delta = now - self._last_time
         self._last_time = now
         if delta > 0.1:  # Ignore very small pauses
-            self.instructions.append(Wait(round(delta, 2)))
+            self.instructions.append(Wait(
+                ValueRef(round(delta, 2))
+            ))
         return delta
 
     # -----------------------------
@@ -53,7 +57,7 @@ class Recorder:
         delta_t = self._add_wait_if_needed()
 
         is_double_click = delta_t < self.DOUBLE_CLICK_THRESHOLD
-
+        
         # add click
         if button == mouse.Button.left:
             if is_double_click:
@@ -62,17 +66,17 @@ class Recorder:
                 self.instructions.append(MouseDoubleClick())
                 logger.info("Recorded double left click at ({}, {})".format(x, y))
             else:
-                self.instructions.append(MouseMove(x, y))
+                self.instructions.append(MouseMove(ValueRef(x), ValueRef(y)))
                 self.instructions.append(MouseLeftClick())
                 logger.info("Recorded left click at ({}, {})".format(x, y))
 
         elif button == mouse.Button.right:
-            self.instructions.append(MouseMove(x, y))
+            self.instructions.append(MouseMove(ValueRef(x), ValueRef(y)))
             self.instructions.append(MouseRightClick())
             logger.info("Recorded right click at ({}, {})".format(x, y))
         
         elif button == mouse.Button.middle:
-            self.instructions.append(MouseMove(x, y))
+            self.instructions.append(MouseMove(ValueRef(x), ValueRef(y)))
             logger.info("Recorded mouse move to ({}, {})".format(x, y))
 
     # -----------------------------
