@@ -1,6 +1,6 @@
 # Clicker Program
 
-
+*An Italian version of this document is avaliable [here](docs/README_it.md).*
 
 A software (auto-clicker / click automation tool) for automating mouse cursor operations, entirely controlled using a graphical user interface.  
 
