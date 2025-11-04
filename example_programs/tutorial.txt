@@ -39,7 +39,6 @@ label LOOP
 label LOOP-x
     label LOOP-y
         moverel 0 10    ; moves 10px down
-        wait 0.5
         ; <-- Your custom code
         jump LOOP-y 10
     moverel 10 -100     ; position cursor correctly for next iteration of LOOP-y

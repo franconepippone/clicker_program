@@ -18,6 +18,8 @@ printvar out
 var out = x / y
 printvar out
 
+wait 1
+pause	; give time to observe results
 
 ; Loops
 
@@ -42,7 +44,7 @@ label drawStart
 	var y_vel = y_vel + 2		; Decreases velocity, acts like gravity
 	
 	move mouse_x mouse_y
-	jump drawStart 30
+	jump drawStart 40
 
 
 
