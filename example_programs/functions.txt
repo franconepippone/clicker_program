@@ -9,7 +9,7 @@ label function_1
 	moverel 0 50 1
 	moverel -50 0 1
 	moverel 0 -50 1
-	return	; Here the program jumps to line 21, right after "call ..."
+	return	; Here the program jumps to line 20, right after "call ..."
 
 
 
