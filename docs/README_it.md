@@ -16,7 +16,7 @@ Dall’interfaccia grafica sono disponibili due operazioni principali:
 - **Record (Registra)** — Registra una sequenza di azioni del mouse e inserisce automaticamente i comandi corrispondenti nell’editor.  
   - Premendo il **pulsante centrale del mouse** (rotellina) viene registrato solo un comando di movimento, senza click.
 
-Per un elenco completo e dettagliato dei comandi del linguaggio di scripting, consultare la [Command Reference](docs/linguaggio_it.md).
+Per un elenco completo e dettagliato dei comandi del linguaggio di scripting, consultare la [Command Reference](linguaggio_it.md).
 
 ---
 
