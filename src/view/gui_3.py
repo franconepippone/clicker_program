@@ -467,12 +467,17 @@ class ScriptEditorApp(QWidget):
 
         logger_exec.info("Running script...")
 
-        from app_logic.virtual_machine.executor_process import begin_compile_and_execute_process
+        from app_logic.virtual_machine.executor_process import begin_compile_and_execute_process, RunParams
 
         self.queue_listener.start()
-
+        params = RunParams(
+            code_src,
+            self._get_safe_mode_flag(),
+            Qt.Key.Key_Space,
+            self.log_queue
+        )
         # Start the subprocess and disable the Run button until it finishes
-        self.proc = begin_compile_and_execute_process(code_src, self._get_safe_mode_flag(), self.log_queue)
+        self.proc = begin_compile_and_execute_process(params)
         self.subprocess_mark_as_started("run")
     
     def record_script(self):

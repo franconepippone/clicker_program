@@ -5,15 +5,13 @@ from PyQt6 import QtWidgets, QtCore
 from typing import Optional
 from logging.handlers import QueueListener
 import multiprocessing
-
 import pyautogui
 
 from app_logic.recorder.recorder import Recorder
 from app_logic.decompiler.decompiler import Decompiler
 import utils.logger_config as logger_config
 
-from utils.processes_utils import start_key_quitter, setup_subprocess_logging, ProcessDialog
-
+from utils.processes_utils import setup_subprocess_logging, ProcessDialog
 
 def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):
     """
@@ -52,8 +50,6 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
 
             self.finished.emit()
     
-    listener = start_key_quitter()
-
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
     dlg = MouseRecorderDialog()

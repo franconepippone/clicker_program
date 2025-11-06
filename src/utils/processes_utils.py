@@ -1,28 +1,15 @@
 from typing import Optional
 import multiprocessing
 from PyQt6 import QtWidgets, QtCore
+from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtCore import Qt
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import os
 import time
-from pynput import keyboard
 
 import utils.logger_config as logger_config
 
-
-def start_key_quitter():
-    """
-    Start a keyboard listener that quits the program when ESC is pressed.
-    """
-    def on_press(key):
-        if key == keyboard.Key.esc:
-            logger_config.logger_editor.warning("ESC pressed — terminating.")
-            time.sleep(.2)  # Give time for log to flush
-            os._exit(0)
-
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
-    return listener
 
 def setup_subprocess_logging(log_queue: Optional[multiprocessing.Queue] = None):
     """
@@ -123,10 +110,18 @@ class ProcessDialog(QtWidgets.QDialog):
             self.play_button.hide()
             self.pause_button.show()
             self.paused = False
+    
+    def keyPressEvent(self, a0: QKeyEvent | None) -> None:
+        if a0:
+            if a0.key() == Qt.Key.Key_Escape:
+                logger_config.logger_editor.warning("ESC pressed — terminating.")
+                time.sleep(.2)  # Give time for log to flush
+                os._exit(0)
 
 
     def terminate_process(self):
         self.logger.warning("Stop button pressed — terminating.")
+        time.sleep(.2)
         os._exit(0)
 
     def on_finished(self):
