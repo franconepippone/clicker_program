@@ -6,7 +6,7 @@ import logging
 from PyQt6.QtCore import Qt
 from PyQt6 import QtCore, QtWidgets
 import multiprocessing
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QKeySequence
 from pynput import keyboard
 import time
 from dataclasses import dataclass
@@ -19,9 +19,9 @@ from utils.processes_utils import setup_subprocess_logging, ProcessDialog
 
 
 # text shown in the process dialog
-DIALOG_TEXT = """
+DIALOG_TEXT = lambda keyname: f"""
 Runnig script, press ESC to terminate.
-Press SPACE to pause/resume execution.
+Press {keyname} to pause/resume execution.
 """
 
 @dataclass
@@ -41,11 +41,13 @@ def _run_program_from_text(params: RunParams):
 
     setup_subprocess_logging(params.log_queue)
 
+    key_name = QKeySequence(params.pause_key).toString().upper()
+
     class ScriptRunnerDialog(ProcessDialog):
         worker: ExecutionThread
 
         def __init__(self):
-            super().__init__("Script runner", DIALOG_TEXT, logger_config.logger_editor, ExecutionThread(params.text))
+            super().__init__("Script runner", DIALOG_TEXT(key_name), logger_config.logger_editor, ExecutionThread(params.text))
             self.worker.compilation_failed.connect(self._change_text_to_compilation_failed)
             self.stop_button.clicked.connect(self.terminate_process)
             self.pause_button.clicked.connect(self.worker.executor.pause)

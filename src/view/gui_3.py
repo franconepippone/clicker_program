@@ -167,8 +167,6 @@ class ScriptEditorApp(QWidget):
         options_menu.addAction(settings_action)
         settings_action.triggered.connect(self.open_settings_dialog)
 
-        options_menu.addAction("Appearance...")
-
         # Script Tools menu
         #tools_menu = menubar.addMenu("Script Tools")
         #offset_action = QAction("Offset All Positions", self)
@@ -353,6 +351,7 @@ class ScriptEditorApp(QWidget):
 
         def _make_loader(path):
             def _loader(*_args):
+                if not self.confirm_discard_changes(): return
                 try:
                     with path.open("r", encoding="utf-8") as fh:
                         self.editor.setPlainText(fh.read())
@@ -473,7 +472,7 @@ class ScriptEditorApp(QWidget):
         params = RunParams(
             code_src,
             self._get_safe_mode_flag(),
-            Qt.Key.Key_Space,
+            Qt.Key(Settings.pause_resume_key),
             self.log_queue
         )
         # Start the subprocess and disable the Run button until it finishes

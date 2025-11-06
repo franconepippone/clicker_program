@@ -3,5 +3,6 @@
     "print_debug_msg": true,
     "text_size": 10,
     "dark_mode": false,
-    "notify_when_program_ends": true
+    "notify_when_program_ends": true,
+    "pause_resume_key": 32
 }

@@ -29,7 +29,7 @@ class SettingsDialog(QDialog):
         # --- Main layout structure ---
         outer_layout = QVBoxLayout(self)  # Top-level vertical layout
         main_layout = QHBoxLayout()       # Holds sidebar + stacked pages
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(10)
 
         # --- Sidebar ---
@@ -77,10 +77,14 @@ class SettingsDialog(QDialog):
 
         # Pause/Play key selector
         key_layout = QHBoxLayout()
-        key_label = QLabel("Pause/Play key:")
+        key_label = QLabel("Pause/Resume key:")
         self.key_display = QLineEdit()
         self.key_display.setReadOnly(True)
         self.key_display.setPlaceholderText("No key set")
+
+        key_name = QKeySequence(Settings.pause_resume_key).toString()
+        self.key_display.setText(key_name)
+        self.key_id = Settings.pause_resume_key
 
         set_key_button = QPushButton("Set Key")
         set_key_button.clicked.connect(self._capture_pause_play_key)
@@ -115,7 +119,7 @@ class SettingsDialog(QDialog):
                 self.captured_key = None
 
             def keyPressEvent(self, a0: QKeyEvent | None) -> None:
-                # Capture the key name
+                # Capture the key name (add key filtering eventually)
                 if a0 is not None:
                     self.captured_key = a0.key()
                     self.accept()
@@ -126,6 +130,7 @@ class SettingsDialog(QDialog):
             # Convert Qt key to readable name
             key_name = QKeySequence(dlg.captured_key).toString()
             self.key_display.setText(key_name)
+            self.key_id = dlg.captured_key
             # You can store it to Settings if desired:
             # Settings.pause_play_key = dlg.captured_key
 
@@ -179,6 +184,7 @@ class SettingsDialog(QDialog):
         Settings.dark_mode = self.dark_mode_checkbox.isChecked()
         Settings.text_size = self.text_size_slider.value()
         Settings.notify_when_program_ends = self.notify_on_end.isChecked()
+        Settings.pause_resume_key = self.key_id
 
         if self.update_fnc:
             self.update_fnc()

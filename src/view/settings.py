@@ -2,8 +2,12 @@ from __future__ import annotations
 import json
 import os
 from typing import Any, Dict
+from PyQt6.QtGui import QKeySequence
+from PyQt6.QtCore import Qt
 
 DEFAULT_SETTINGS_FILENAME = "settings.json"
+
+DEFAULT_KEY = Qt.Key.Key_Space
 
 class Settings:
     """
@@ -17,6 +21,7 @@ class Settings:
     text_size: int = 12
     dark_mode: bool = False
     notify_when_program_ends: bool = False
+    pause_resume_key: int = DEFAULT_KEY
 
     # --- File I/O ---
 
