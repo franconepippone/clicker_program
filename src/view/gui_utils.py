@@ -57,7 +57,7 @@ KEYWORDS_BLUE = [
 ]
 
 KEYWORDS_ORANGE = [
-    "call", "return", "jump", "label"
+    "call", "return", "jump", "label", "end"
 ]
 
 KEYWORDS_PURPLE = [

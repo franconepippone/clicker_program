@@ -24,7 +24,8 @@ from app_logic.instruction_set import (
     SetSafeMode,
     VarMath,
     SetVar,
-    PrintVar
+    PrintVar,
+    EndProgram
 )
 
 from app_logic.instruction_names import *
@@ -60,6 +61,10 @@ def get_compiler_cfg(safemode: bool) -> Callable[[Compiler], None]:
         or can optionally be passed to the __init__ method of Compiler:
         > cmp = Compiler(configure_compiler)
         """
+
+        @compiler.command('end')
+        def end_command(compiler_ctx: CompilerContextDict) -> EndProgram:
+            return EndProgram()
 
         @compiler.command(MOVE)
         def move_command(compiler_ctx: CompilerContextDict, x: ValueRef, y: ValueRef, t: float = 0.0) -> MouseMove:

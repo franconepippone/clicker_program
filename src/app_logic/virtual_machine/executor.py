@@ -16,6 +16,16 @@ class Instruction(ABC):
         """Implements execution logic for instruction"""
         raise NotImplementedError
 
+class HaltExecution(Instruction):
+    """Halt execution instruction. Does not actually execute,
+    managed internally by the executor.
+
+    Subclass to implement custom functionality
+    """
+    
+    def execute(self, executor: Executor):
+        return None
+
 
 class Executor:
     """Helper class to execute a list of instruction"""
@@ -99,6 +109,10 @@ class Executor:
                 break
             
             inst: Instruction = self.program[self.pc]
+            if isinstance(inst, HaltExecution):
+                logger.debug(f"{inst} encountered, stopping program.")
+                break  # exits program immediately
+
             try:
                 inst.execute(self)
             except Exception as e:

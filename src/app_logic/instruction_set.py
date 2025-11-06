@@ -9,7 +9,7 @@ import re
 import pyautogui as gui
 from pynput import keyboard
 
-from app_logic.virtual_machine.executor import Executor, Instruction
+from app_logic.virtual_machine.executor import Executor, Instruction, HaltExecution
 
 
 WARN_STACK_SIZE = 500
@@ -313,6 +313,23 @@ class Pause(Instruction):
 ### --------------- OTHERS ---------------
 
 @dataclass
+class ConsolePrint(Instruction):
+    msg: str
+
+    def execute(self, executor: Executor):
+        executor.logger_internal.info(self.msg)
+
+@dataclass
+class SetSafeMode(Instruction):
+    on: bool
+    
+    def execute(self, executor: Executor):
+        _set_safemode(_getshrdict(executor), self.on)
+        executor.logger_internal.info(f"Safe mode is {"enabled" if self.on else "disabled"}")
+
+### --------------- FLOW ---------------
+
+@dataclass
 class JumpNTimes(Instruction):
     num: ValueRef       # if set to -1 do infinte jump
     jump_idx: int
@@ -334,23 +351,6 @@ class JumpNTimes(Instruction):
         # jump
         executor.pc = self.jump_idx - 1
 
-@dataclass
-class ConsolePrint(Instruction):
-    msg: str
-
-    def execute(self, executor: Executor):
-        executor.logger_internal.info(self.msg)
-
-@dataclass
-class SetSafeMode(Instruction):
-    on: bool
-    
-    def execute(self, executor: Executor):
-        _set_safemode(_getshrdict(executor), self.on)
-        executor.logger_internal.info(f"Safe mode is {"enabled" if self.on else "disabled"}")
-
-### --------------- FUNCTIONS ---------------
-
 class Call(JumpNTimes):
     def execute(self, executor: Executor):
         _push_pc(_getshrdict(executor), executor.pc) # next instruction
@@ -362,6 +362,11 @@ class Return(Instruction):
         if pc:
             executor.pc = pc    # return to call point
 
+# subclass just to conform to standards
+class EndProgram(HaltExecution):
+    def execute(self, executor: Executor):
+        #executor.logger_internal.debug("Program halted from instruction")
+        return super().execute(executor)
 
 ### --------------- VARIABLES ---------------
 
