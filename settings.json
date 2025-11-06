@@ -2,5 +2,6 @@
     "clear_terminal_on_run": true,
     "print_debug_msg": true,
     "text_size": 10,
-    "dark_mode": false
+    "dark_mode": false,
+    "notify_when_program_ends": true
 }

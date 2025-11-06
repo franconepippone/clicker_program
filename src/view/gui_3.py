@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 import logging
 import multiprocessing
 
@@ -473,7 +473,7 @@ class ScriptEditorApp(QWidget):
 
         # Start the subprocess and disable the Run button until it finishes
         self.proc = begin_compile_and_execute_process(code_src, self._get_safe_mode_flag(), self.log_queue)
-        self.subprocess_mark_as_started()
+        self.subprocess_mark_as_started("run")
     
     def record_script(self):
         logger_editor.info("Starting recording session")
@@ -487,18 +487,33 @@ class ScriptEditorApp(QWidget):
 
         # Start the subprocess and disable the Run/Record buttons until it finishes
         self.proc = begin_recording_process(self.log_queue, self.msg_queue)
-        self.subprocess_mark_as_started()
+        self.subprocess_mark_as_started("record")
     
-    def subprocess_mark_as_started(self):
+    def subprocess_mark_as_started(self, process: Literal["run", "record"]):
         """Disables the Run and Record buttons and starts the process monitor timer.
         """
         self.run_btn.setEnabled(False)
         self.record_btn.setEnabled(False)
         self.proc_monitor_timer.start(500)
+        self.process_type = process
 
     def update_mouse_position(self):
         pos = QCursor.pos()
         self.coord_label.setText(f"X:{pos.x()}  Y:{pos.y()}")
+    
+    def show_end_dialog(self):
+        """Show an always-on-top info dialog saying 'Program ended.'"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Information")
+        msg_box.setText("Script execution terminated.")
+        msg_box.setIcon(QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+
+        # Make sure it's always on top
+        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+        msg_box.setWindowModality(Qt.WindowModality.ApplicationModal)
+
+        msg_box.exec()
 
     def _check_process(self):
         """Poll the subprocess; when it exits, stop the listener and re-enable UI."""
@@ -542,6 +557,10 @@ class ScriptEditorApp(QWidget):
                 self.queue_listener.stop()
             except Exception:
                 logger_editor.exception("Failed to stop queue listener")
+
+            if Settings.notify_when_program_ends:
+                if self.process_type == "run":
+                    self.show_end_dialog()
 
             # reset state
             self.proc = None

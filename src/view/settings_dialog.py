@@ -3,9 +3,10 @@ from typing import Callable
 from PyQt6.QtWidgets import (
     QDialog, QListWidget, QListWidgetItem, QStackedWidget,
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox,
-    QSlider, QDialogButtonBox, QApplication
+    QSlider, QDialogButtonBox, QApplication, QLineEdit, QPushButton
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent, QKeySequence
 import logging
 
 from .settings import Settings
@@ -56,11 +57,79 @@ class SettingsDialog(QDialog):
         # --- Add pages ---
         self._add_terminal_page()
         self._add_appearance_page()
+        self._add_execution_page()
 
         # --- Default selection ---
         self.category_list.setCurrentRow(0)
         self.category_list.currentRowChanged.connect(self.stack.setCurrentIndex)
 
+    # --- Execution settings page ---
+    def _add_execution_page(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+
+        # Notify checkbox
+        self.notify_on_end = QCheckBox(" Notify when program ends")
+        self.notify_on_end.setChecked(Settings.notify_when_program_ends)
+        layout.addWidget(self.notify_on_end)
+
+        # Pause/Play key selector
+        key_layout = QHBoxLayout()
+        key_label = QLabel("Pause/Play key:")
+        self.key_display = QLineEdit()
+        self.key_display.setReadOnly(True)
+        self.key_display.setPlaceholderText("No key set")
+
+        set_key_button = QPushButton("Set Key")
+        set_key_button.clicked.connect(self._capture_pause_play_key)
+
+        key_layout.addWidget(key_label)
+        key_layout.addWidget(self.key_display)
+        key_layout.addWidget(set_key_button)
+        layout.addLayout(key_layout)
+
+        layout.addStretch()
+
+        self.category_list.addItem(QListWidgetItem("Execution"))
+        self.stack.addWidget(page)
+
+
+    def _capture_pause_play_key(self):
+        """Open a small dialog to capture a single key press."""
+
+        class KeyCaptureDialog(QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setWindowTitle("Press a key")
+                self.setModal(True)
+                self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+                self.resize(250, 100)
+
+                layout = QVBoxLayout(self)
+                label = QLabel("Press any key to assign as Pause/Play key", self)
+                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                layout.addWidget(label)
+
+                self.captured_key = None
+
+            def keyPressEvent(self, a0: QKeyEvent | None) -> None:
+                # Capture the key name
+                if a0 is not None:
+                    self.captured_key = a0.key()
+                    self.accept()
+
+        # Show key capture dialog
+        dlg = KeyCaptureDialog(self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.captured_key:
+            # Convert Qt key to readable name
+            key_name = QKeySequence(dlg.captured_key).toString()
+            self.key_display.setText(key_name)
+            # You can store it to Settings if desired:
+            # Settings.pause_play_key = dlg.captured_key
+
+            
     # --- Terminal settings page ---
     def _add_terminal_page(self):
         page = QWidget()
@@ -109,12 +178,21 @@ class SettingsDialog(QDialog):
         Settings.clear_terminal_on_run = self.clear_on_run_checkbox.isChecked()
         Settings.dark_mode = self.dark_mode_checkbox.isChecked()
         Settings.text_size = self.text_size_slider.value()
+        Settings.notify_when_program_ends = self.notify_on_end.isChecked()
 
         if self.update_fnc:
             self.update_fnc()
 
         Settings.store_to_file()
         logger_editor.info("Saved settings")
+    
+    def keyPressEvent(self, a0: QKeyEvent | None):
+        """Handle keypresses from inside the dialog."""
+        if (event := a0) is not None:
+            if event.key() == Qt.Key.Key_Escape:
+                self.accept()  # Close on Esc
+            else:
+                super().keyPressEvent(a0)
 
         
 

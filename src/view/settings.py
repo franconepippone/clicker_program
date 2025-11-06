@@ -16,6 +16,7 @@ class Settings:
     print_debug_msg: bool = False
     text_size: int = 12
     dark_mode: bool = False
+    notify_when_program_ends: bool = False
 
     # --- File I/O ---
 
