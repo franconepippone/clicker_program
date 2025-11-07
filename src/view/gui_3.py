@@ -143,6 +143,8 @@ class ScriptEditorApp(QWidget):
 
         # File menu
         file_menu = menubar.addMenu("&File")
+        assert isinstance(file_menu, QMenu)     # to get rid of pylance error
+
         new_action = QAction("New", self)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.new_file)
@@ -158,20 +160,16 @@ class ScriptEditorApp(QWidget):
         save_as_action = QAction("Save as", self)
         save_as_action.setShortcut("Ctrl+Shift+S")
         save_as_action.triggered.connect(self.save_file_as)
-
+        
         file_menu.addActions([new_action, open_action, save_action, save_as_action])
 
         # Preferences menu
         options_menu = menubar.addMenu("Preferences")
+        assert isinstance(options_menu, QMenu)      # gets rid of pylance error
+
         settings_action = QAction("Settings...", self)
         options_menu.addAction(settings_action)
         settings_action.triggered.connect(self.open_settings_dialog)
-
-        # Script Tools menu
-        #tools_menu = menubar.addMenu("Script Tools")
-        #offset_action = QAction("Offset All Positions", self)
-        #tools_menu.addAction(offset_action)
-        #offset_action.triggered.connect(lambda: show_offset_dialog(self))
 
         # Examples
         examples_menu = menubar.addMenu("Examples")

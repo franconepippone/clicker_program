@@ -72,6 +72,25 @@ def _run_program_from_text(params: RunParams):
                 else:
                     self.play_button.click()
 
+        def show_popup_dialog(self, 
+                text: str,
+                title: str = "Runtime popup",
+                icon_type: QtWidgets.QMessageBox.Icon = QtWidgets.QMessageBox.Icon.Information
+            ):
+            """Show an always-on-top dialog
+            """
+            msg_box = QtWidgets.QMessageBox(self)
+            msg_box.setWindowTitle(title)
+            msg_box.setText(text)
+            msg_box.setIcon(icon_type)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+
+            # Make sure it's always on top
+            msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+            msg_box.setWindowModality(Qt.WindowModality.ApplicationModal)
+
+            msg_box.exec()
+
     class ExecutionThread(QtCore.QThread):
         finished = QtCore.pyqtSignal()
         compilation_failed = QtCore.pyqtSignal()

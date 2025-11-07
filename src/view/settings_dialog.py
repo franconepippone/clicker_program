@@ -47,8 +47,8 @@ class SettingsDialog(QDialog):
             QDialogButtonBox.StandardButton.Apply |
             QDialogButtonBox.StandardButton.Close
         )
-        buttons.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply_settings)
-        buttons.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply_settings) # type: ignore
+        buttons.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.reject) # type: ignore
 
         # --- Compose layouts ---
         outer_layout.addLayout(main_layout)
@@ -112,7 +112,7 @@ class SettingsDialog(QDialog):
                 self.resize(250, 100)
 
                 layout = QVBoxLayout(self)
-                label = QLabel("Press any key to assign as Pause/Play key", self)
+                label = QLabel("Press any key to assign as Pause/Resume key", self)
                 label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 layout.addWidget(label)
 

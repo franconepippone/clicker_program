@@ -57,6 +57,11 @@ class ProcessDialog(QtWidgets.QDialog):
         self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter) 
         layout.addWidget(self.label)
 
+        #self.console_label = QtWidgets.QLabel("")
+        #self.console_label.setWordWrap(True)
+        #self.console_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter) 
+        #layout.addWidget(self.console_label)
+
         # --- Buttons layout ---
         button_layout = QtWidgets.QHBoxLayout()
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Tuple, List, Any, TypedDict, cast, overload, TypeVar, Type
+from typing import Dict, Tuple, List, Any, TypedDict, cast, overload, TypeVar, Type, Callable
 from dataclasses import dataclass
 import time
 from enum import Enum
@@ -32,6 +32,12 @@ class VarMathOperations(Enum):
     DIFFERENCE = 'diff'
     MULTIPLICATION = 'mult'
     DIVISION = 'div'
+
+class PopupDialogIcons(Enum):
+    INFO = 0
+    WARNING = 0
+    QUESTION = 0
+    CRITICAL = 0
 
 class ValueRef:
     """
@@ -326,6 +332,27 @@ class SetSafeMode(Instruction):
     def execute(self, executor: Executor):
         _set_safemode(_getshrdict(executor), self.on)
         executor.logger_internal.info(f"Safe mode is {"enabled" if self.on else "disabled"}")
+
+@dataclass
+class PrintPopup(Instruction):
+    """ Attempts to spawn a popup (this is not done by the executor itself,
+    but there is a custom handler passed to objects of this class at compile time
+    that manages the GUI interaction. This class just holds the attributes)
+    """
+    icon: PopupDialogIcons
+    text: str
+    title: str
+    popup_callback: Callable[[Dict], None]
+
+    def execute(self, executor: Executor):
+        # pass the arguments as dictionary, to make the handler as decoupled as possible
+        self.popup_callback({
+            'icon' : self.icon,
+            'text' : self.text,
+            'title' : self.title
+        })
+
+
 
 ### --------------- FLOW ---------------
 
