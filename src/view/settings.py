@@ -19,7 +19,7 @@ class Settings:
     """
 
     # --- Default values ---
-    clear_terminal_on_run: bool = False
+    clear_terminal_on_run: bool = True
     print_debug_msg: bool = False
     text_size: int = 10
     dark_mode: bool = False

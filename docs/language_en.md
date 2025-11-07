@@ -73,6 +73,9 @@ Example:
   **Note:** each **call** must have a matching **return** for correct execution.  
   See *example_programs/functions.txt* for code examples.
 
+- **end**
+  Terminates script execution.
+  Esempio: `end`
 ---
 
 ## 🧮 Variables

@@ -49,7 +49,7 @@ Esempio:
 
 ---
 
-## 🔁 Comandi di Ciclo e Salto
+## 🔁 Comandi di Flusso
 
 - **label** `<name>`  
   Definisce un’etichetta a cui poter saltare.  
@@ -70,6 +70,10 @@ Esempio:
   Restituisce il controllo al punto del programma in cui era stato eseguito il corrispondente **call**; in altre parole, ritorna ad eseguire il programma dal punto subito dopo in cui era stato effettuato il salto con un **call**.  
   **Nota:** per il corretto funzionamento, ogni **call** deve corrispondere a un **return**.  
   Consulta *example_programs/functions.txt* per esempi pratici.
+
+- **end**
+  Termina l'esecuzione dello script.
+  Esempio: `end`
 
 ---
 
