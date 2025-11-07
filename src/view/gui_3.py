@@ -16,6 +16,7 @@ from logging.handlers import QueueListener
 from .gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, show_offset_dialog
 from .settings_dialog import SettingsDialog
 from .settings import Settings
+from utils.resource_resolver import resource_path
 
 # ----------------------
 # Logging setup
@@ -337,19 +338,21 @@ class ScriptEditorApp(QWidget):
 
 
     def setup_example_menu(self, examples_menu):
-        def _find_examples_dir():
-            from pathlib import Path
-            cur = Path(__file__).resolve().parent
-            for _ in range(6):
-                candidate = cur / "example_programs"
-                if candidate.exists() and candidate.is_dir():
-                    return candidate
-                cur = cur.parent
+        from pathlib import Path
+
+        def _find_examples_dir() -> Path | None:
+            # Try PyInstaller-aware path first
+            examples_dir = resource_path("example_programs")
+            if examples_dir.exists() and examples_dir.is_dir():
+                return examples_dir
+
             return None
 
-        def _make_loader(path):
+        def _make_loader(path: Path):
             def _loader(*_args):
-                if not self.confirm_discard_changes(): return
+                print("Example file path:", path)
+                if not self.confirm_discard_changes():
+                    return
                 try:
                     with path.open("r", encoding="utf-8") as fh:
                         self.editor.setPlainText(fh.read())
@@ -361,8 +364,12 @@ class ScriptEditorApp(QWidget):
             return _loader
 
         examples_dir = _find_examples_dir()
+        print("Examples dir path:", examples_dir)
         if examples_dir:
-            files = sorted([p for p in examples_dir.iterdir() if p.is_file()], key=lambda p: p.name.lower())
+            files = sorted(
+                [p for p in examples_dir.iterdir() if p.is_file()],
+                key=lambda p: p.name.lower(),
+            )
             if files:
                 for p in files:
                     action = QAction(p.name, self)
@@ -376,6 +383,7 @@ class ScriptEditorApp(QWidget):
             no_dir_action = QAction("No examples directory", self)
             no_dir_action.setEnabled(False)
             examples_menu.addAction(no_dir_action)
+
 
     # ---------------- Utility Methods ----------------
     def button_style(self):

@@ -2,10 +2,13 @@ from __future__ import annotations
 import json
 import os
 from typing import Any, Dict
-from PyQt6.QtGui import QKeySequence
 from PyQt6.QtCore import Qt
+from pathlib import Path
 
-DEFAULT_SETTINGS_FILENAME = "settings.json"
+from utils.resource_resolver import resource_path
+
+DEFAULT_SETTINGS_PATH = Path("settings.json") # maybe update this to be stored in user appdata
+print("Settings path:", DEFAULT_SETTINGS_PATH)
 
 DEFAULT_KEY = Qt.Key.Key_Space
 
@@ -18,7 +21,7 @@ class Settings:
     # --- Default values ---
     clear_terminal_on_run: bool = False
     print_debug_msg: bool = False
-    text_size: int = 12
+    text_size: int = 10
     dark_mode: bool = False
     notify_when_program_ends: bool = False
     pause_resume_key: int = DEFAULT_KEY
@@ -41,7 +44,7 @@ class Settings:
         return data
 
     @classmethod
-    def store_to_file(cls, filename: str = DEFAULT_SETTINGS_FILENAME) -> None:
+    def store_to_file(cls, filename: Path = DEFAULT_SETTINGS_PATH) -> None:
         """Write current settings to a JSON file."""
         data = cls._get_serializable_attrs()
         os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
@@ -49,7 +52,7 @@ class Settings:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
     @classmethod
-    def load_from_file(cls, filename: str = DEFAULT_SETTINGS_FILENAME) -> None:
+    def load_from_file(cls, filename: Path = DEFAULT_SETTINGS_PATH) -> None:
         """
         Load settings from JSON file, creating it with defaults if missing.
         Invalid files are reset to defaults.

@@ -1,0 +1,8 @@
+{
+    "clear_terminal_on_run": false,
+    "print_debug_msg": false,
+    "text_size": 10,
+    "dark_mode": false,
+    "notify_when_program_ends": false,
+    "pause_resume_key": 32
+}

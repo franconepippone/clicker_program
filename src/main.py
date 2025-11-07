@@ -6,6 +6,7 @@ import sys
 from view.gui_3 import QApplication, ScriptEditorApp
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QPalette, QColor
+import view.settings
 
 def set_global_font_size(app: QApplication, size: int):
     font = app.font()          # get the current default font
