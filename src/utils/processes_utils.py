@@ -33,6 +33,7 @@ def setup_subprocess_logging(log_queue: Optional[multiprocessing.Queue] = None):
 # --- Qt GUI ---
 class ProcessDialog(QtWidgets.QDialog):
     paused: bool = False
+    graceful_termination = QtCore.pyqtSignal()  
 
     def __init__(self, window_title: str, window_message: str, logger: logging.Logger, execution_thread: QtCore.QThread):
         super().__init__()
@@ -131,4 +132,71 @@ class ProcessDialog(QtWidgets.QDialog):
 
     def on_finished(self):
         self.label.setText("Finished.")
-        os._exit(0)
+        self.accept()
+        #self.graceful_termination.emit()
+        #os._exit(0)
+
+
+from PyQt6 import QtWidgets, QtCore
+
+class EndNotifyDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None, title="Information", message="Script execution terminated."):
+        super().__init__(parent)
+
+        self.setWindowTitle(title)
+        self.setWindowFlags(
+            QtCore.Qt.WindowType.WindowStaysOnTopHint |
+            QtCore.Qt.WindowType.Dialog |
+            QtCore.Qt.WindowType.WindowCloseButtonHint
+        )
+        self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+
+        # --- Main layout ---
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(10)
+
+        # --- Icon + message in horizontal layout ---
+        h_layout = QtWidgets.QHBoxLayout()
+        h_layout.setSpacing(10)
+
+        # Icon (smaller)
+        icon_label = QtWidgets.QLabel()
+        pixmap = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation).pixmap(32, 32)
+        icon_label.setPixmap(pixmap)
+        icon_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        h_layout.addWidget(icon_label, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
+
+        # Message (no wrap)
+        text_label = QtWidgets.QLabel(message)
+        text_label.setWordWrap(False)
+        text_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        text_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+        h_layout.addWidget(text_label)
+
+        main_layout.addLayout(h_layout)
+
+        # --- OK button centered at the bottom ---
+        ok_button = QtWidgets.QPushButton("OK")
+        ok_button.setDefault(True)
+        ok_button.clicked.connect(self.accept)
+        btn_layout = QtWidgets.QHBoxLayout()
+        btn_layout.addStretch()
+        btn_layout.addWidget(ok_button)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
+
+        self.setLayout(main_layout)
+
+        # Auto-size window to contents
+        self.adjustSize()
+        self.setSizeGripEnabled(False)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # Bring to front
+        self.raise_()
+        self.activateWindow()

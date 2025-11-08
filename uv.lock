@@ -28,6 +28,7 @@ dependencies = [
     { name = "bottle" },
     { name = "keyboard" },
     { name = "pip" },
+    { name = "plyer" },
     { name = "pyautogui" },
     { name = "pyinstaller" },
     { name = "pynput" },
@@ -39,6 +40,7 @@ requires-dist = [
     { name = "bottle", specifier = ">=0.13.4" },
     { name = "keyboard", specifier = ">=0.13.5" },
     { name = "pip", specifier = ">=25.3" },
+    { name = "plyer", specifier = ">=2.1.0" },
     { name = "pyautogui", specifier = ">=0.9.54" },
     { name = "pyinstaller", specifier = ">=6.16.0" },
     { name = "pynput", specifier = ">=1.8.1" },
@@ -111,6 +113,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fe/6e/74a3f0179a4a73a53d66ce57fdb4de0080a8baa1de0063de206d6167acc2/pip-25.3.tar.gz", hash = "sha256:8d0538dbbd7babbd207f261ed969c65de439f6bc9e5dbd3b3b9a77f25d95f343", size = 1803014, upload-time = "2025-10-25T00:55:41.394Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/3c/d717024885424591d5376220b5e836c2d5293ce2011523c9de23ff7bf068/pip-25.3-py3-none-any.whl", hash = "sha256:9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd", size = 1778622, upload-time = "2025-10-25T00:55:39.247Z" },
+]
+
+[[package]]
+name = "plyer"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/85/f61425aa9be1f9108eec1c13861c1e11c9a04eb786eb4832a8f7188317df/plyer-2.1.0.tar.gz", hash = "sha256:65b7dfb7e11e07af37a8487eb2aa69524276ef70dad500b07228ce64736baa61", size = 121371, upload-time = "2022-11-12T13:36:48.978Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/89/a41c2643fc8eabeb84791acb9d0e4d139b1e4b53473cc4dae947b5fa33ed/plyer-2.1.0-py2.py3-none-any.whl", hash = "sha256:1b1772060df8b3045ed4f08231690ec8f7de30f5a004aa1724665a9074eed113", size = 142266, upload-time = "2022-11-12T13:36:47.181Z" },
 ]
 
 [[package]]

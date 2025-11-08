@@ -1,6 +1,7 @@
 from typing import Optional, Literal
 import logging
 import multiprocessing
+from plyer import notification
 
 from PyQt6.QtCore import Qt, QTimer, QObject, pyqtSignal
 from PyQt6.QtGui import QCursor, QColor, QTextCharFormat, QIcon, QAction, QTextCursor
@@ -479,6 +480,7 @@ class ScriptEditorApp(QWidget):
             code_src,
             self._get_safe_mode_flag(),
             Qt.Key(Settings.pause_resume_key),
+            Settings.notify_when_program_ends,
             self.log_queue
         )
         # Start the subprocess and disable the Run button until it finishes
@@ -511,19 +513,16 @@ class ScriptEditorApp(QWidget):
         pos = QCursor.pos()
         self.coord_label.setText(f"X:{pos.x()}  Y:{pos.y()}")
     
-    def show_end_dialog(self):
-        """Show an always-on-top info dialog saying 'Program ended.'"""
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Information")
-        msg_box.setText("Script execution terminated.")
-        msg_box.setIcon(QMessageBox.Icon.Information)
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    def send_system_end_notification(self):
+        """send system notification to notify that script has ended.
+        """
 
-        # Make sure it's always on top
-        msg_box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
-        msg_box.setWindowModality(Qt.WindowModality.ApplicationModal)
-
-        msg_box.exec()
+        notification.notify(
+            title="Script Finished",
+            message="Script execution terminated successfully.",
+            app_name="Mouse Emulator",
+            timeout=20  # seconds
+        ) # type: ignore
 
     def _check_process(self):
         """Poll the subprocess; when it exits, stop the listener and re-enable UI."""
@@ -570,8 +569,10 @@ class ScriptEditorApp(QWidget):
 
             if Settings.notify_when_program_ends:
                 if self.process_type == "run":
-                    self.show_end_dialog()
-
+                    # DONT USE IT FOR NOW, AS WE ALREADY HAVE DIALOG IN THE PROCESS
+                    #self.send_system_end_notification()
+                    pass
+                
             # reset state
             self.proc = None
 

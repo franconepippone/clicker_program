@@ -15,7 +15,8 @@ from .executor import Executor
 from app_logic.compiler.compiler import Compiler
 from app_logic.compiler.compiler_config import get_compiler_cfg
 import utils.logger_config as logger_config
-from utils.processes_utils import setup_subprocess_logging, ProcessDialog
+from utils.processes_utils import setup_subprocess_logging, ProcessDialog, EndNotifyDialog
+
 
 
 # text shown in the process dialog
@@ -30,6 +31,7 @@ class RunParams:
     text: str
     safemode: bool
     pause_key: Qt.Key
+    notify_end: bool
     log_queue: Optional[multiprocessing.Queue] = None
 
 
@@ -117,8 +119,14 @@ def _run_program_from_text(params: RunParams):
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
     dlg = ScriptRunnerDialog()
-    dlg.show()
-    app.exec()
+    dlg.exec()
+
+    if params.notify_end:
+        QtWidgets.QApplication.beep()
+        enddlg = EndNotifyDialog()
+        enddlg.exec()
+        
+    sys.exit(0)
 
 # ---------------------------
 # Helper to start program in a process
