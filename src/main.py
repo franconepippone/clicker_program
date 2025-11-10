@@ -1,10 +1,14 @@
 """
 Main entrypoint of the application. Launches the editor when ran.
+
+executable version
+
 """
 
 import sys
 from view.gui_3 import QApplication, ScriptEditorApp
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtGui import QIcon
 import view.settings    # just to preload settings
 import multiprocessing
 
@@ -15,10 +19,12 @@ def set_global_font_size(app: QApplication, size: int):
 
 
 def main():
-    app = QApplication(sys.argv)
-
     multiprocessing.freeze_support()
 
+    app = QApplication(sys.argv)
+    icon = QIcon("assets/app_icon.ico")
+    app.setWindowIcon(icon)
+    
     #app.setStyle("Fusion")
     window = ScriptEditorApp()
     window.update_all_widget_fonts(app, 10)

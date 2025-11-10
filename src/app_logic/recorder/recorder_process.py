@@ -2,6 +2,7 @@ from __future__ import annotations
 import sys
 import logging
 from PyQt6 import QtWidgets, QtCore
+from PyQt6.QtGui import QColor
 from typing import Optional
 from logging.handlers import QueueListener
 import multiprocessing
@@ -12,6 +13,7 @@ from app_logic.decompiler.decompiler import Decompiler
 import utils.logger_config as logger_config
 
 from utils.processes_utils import setup_subprocess_logging, ProcessDialog
+from view.gui_utils import make_icon
 
 def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):
     """
@@ -50,13 +52,16 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
 
             self.finished.emit()
     
+    #listener = start_key_quitter()
+    
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(make_icon(QColor("#cc0000"), "circle"))
     dlg = MouseRecorderDialog()
     dlg.show()
     app.exec()
     
-    listener.stop()
+    #listener.stop()
     
 
 # ---------------------------

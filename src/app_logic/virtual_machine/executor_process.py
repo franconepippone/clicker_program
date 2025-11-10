@@ -6,7 +6,7 @@ import logging
 from PyQt6.QtCore import Qt
 from PyQt6 import QtCore, QtWidgets
 import multiprocessing
-from PyQt6.QtGui import QKeyEvent, QKeySequence
+from PyQt6.QtGui import QKeySequence, QColor
 from pynput import keyboard
 import time
 from dataclasses import dataclass
@@ -17,6 +17,7 @@ from app_logic.compiler.compiler_config import get_compiler_cfg
 import utils.logger_config as logger_config
 from utils.key_translator import qt_to_pynput
 from utils.processes_utils import setup_subprocess_logging, ProcessDialog, EndNotifyDialog, start_key_quitter
+from view.gui_utils import make_icon
 
 
 
@@ -136,6 +137,7 @@ def _run_program_from_text(params: RunParams):
 
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(make_icon(QColor("#00cc00"), "triangle"))
     dlg = ScriptRunnerDialog()
     result = dlg.exec()
 
