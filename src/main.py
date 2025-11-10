@@ -6,11 +6,13 @@ executable version
 """
 
 import sys
+import multiprocessing
+
 from view.gui_3 import QApplication, ScriptEditorApp
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtGui import QIcon
 import view.settings    # just to preload settings
-import multiprocessing
+from utils.resource_resolver import resource_path
 
 def set_global_font_size(app: QApplication, size: int):
     font = app.font()          # get the current default font
@@ -22,9 +24,9 @@ def main():
     multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
-    icon = QIcon("assets/app_icon.ico")
+    icon = QIcon(str(resource_path("assets/app_icon.ico")))
     app.setWindowIcon(icon)
-    
+
     #app.setStyle("Fusion")
     window = ScriptEditorApp()
     window.update_all_widget_fonts(app, 10)
