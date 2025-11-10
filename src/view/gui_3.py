@@ -141,8 +141,6 @@ class ScriptEditorApp(QWidget):
             }
         """)
 
-
-
         # File menu
         file_menu = menubar.addMenu("&File")
         assert isinstance(file_menu, QMenu)     # to get rid of pylance error
@@ -236,12 +234,8 @@ class ScriptEditorApp(QWidget):
         clear_button.setToolTip("Clear terminal")
         clear_button.setFixedHeight(24)
         clear_button.setCursor(Qt.CursorShape.PointingHandCursor)
-
         clear_button.setStyleSheet(self.button_style())
-
         clear_button.clicked.connect(self.terminal.clear)
-
-
 
         # Horizontal header layout
         header_layout = QHBoxLayout()
@@ -330,13 +324,13 @@ class ScriptEditorApp(QWidget):
    
     
     def update_all_widget_fonts(self, widget, size):
+        """Recursively sets the font for each children to the desired size"""
         font = widget.font()
         font.setPointSize(size)
         widget.setFont(font)
 
         for child in widget.findChildren(QWidget):
             self.update_all_widget_fonts(child, size)
-
 
     def setup_example_menu(self, examples_menu):
         from pathlib import Path
@@ -387,7 +381,8 @@ class ScriptEditorApp(QWidget):
 
 
     # ---------------- Utility Methods ----------------
-    def button_style(self):
+    @staticmethod
+    def button_style():
         return """
             QPushButton {
                 font-weight: normal;

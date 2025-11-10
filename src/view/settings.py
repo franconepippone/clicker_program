@@ -5,8 +5,6 @@ from typing import Any, Dict
 from PyQt6.QtCore import Qt
 from pathlib import Path
 
-from utils.resource_resolver import resource_path
-
 DEFAULT_SETTINGS_PATH = Path("settings.json") # maybe update this to be stored in user appdata
 print("Settings path:", DEFAULT_SETTINGS_PATH)
 
@@ -22,7 +20,7 @@ class Settings:
     clear_terminal_on_run: bool = True
     print_debug_msg: bool = False
     text_size: int = 10
-    dark_mode: bool = False
+    dark_mode: bool = False     # STILL DOES NOT DO ANYHTING
     notify_when_program_ends: bool = False
     pause_resume_key: int = DEFAULT_KEY
 

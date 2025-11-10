@@ -5,10 +5,26 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtCore import Qt
 import logging
 from logging.handlers import QueueHandler, QueueListener
+from pynput import keyboard
 import os
 import time
 
 import utils.logger_config as logger_config
+
+
+def start_key_quitter():
+    """
+    Start a keyboard listener that quits the program when ESC is pressed.
+    """
+    def on_press(key):
+        if key == keyboard.Key.esc:
+            logger_config.logger_editor.warning("ESC pressed — terminating.")
+            time.sleep(.2)  # Give time for log to flush
+            os._exit(0)
+
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+    return listener
 
 
 def setup_subprocess_logging(log_queue: Optional[multiprocessing.Queue] = None):
@@ -33,7 +49,6 @@ def setup_subprocess_logging(log_queue: Optional[multiprocessing.Queue] = None):
 # --- Qt GUI ---
 class ProcessDialog(QtWidgets.QDialog):
     paused: bool = False
-    graceful_termination = QtCore.pyqtSignal()  
 
     def __init__(self, window_title: str, window_message: str, logger: logging.Logger, execution_thread: QtCore.QThread):
         super().__init__()
@@ -117,12 +132,12 @@ class ProcessDialog(QtWidgets.QDialog):
             self.pause_button.show()
             self.paused = False
     
-    def keyPressEvent(self, a0: QKeyEvent | None) -> None:
-        if a0:
-            if a0.key() == Qt.Key.Key_Escape:
-                logger_config.logger_editor.warning("ESC pressed — terminating.")
-                time.sleep(.2)  # Give time for log to flush
-                os._exit(0)
+    #def keyPressEvent(self, a0: QKeyEvent | None) -> None:
+    #    if a0:
+    #        if a0.key() == Qt.Key.Key_Escape:
+    #            logger_config.logger_editor.warning("ESC pressed — terminating.")
+    #            time.sleep(.2)  # Give time for log to flush
+    #            os._exit(0)
 
 
     def terminate_process(self):
@@ -132,9 +147,7 @@ class ProcessDialog(QtWidgets.QDialog):
 
     def on_finished(self):
         self.label.setText("Finished.")
-        self.accept()
-        #self.graceful_termination.emit()
-        #os._exit(0)
+        self.done(1)
 
 
 from PyQt6 import QtWidgets, QtCore

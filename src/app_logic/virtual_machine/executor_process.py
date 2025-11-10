@@ -15,7 +15,8 @@ from .executor import Executor
 from app_logic.compiler.compiler import Compiler
 from app_logic.compiler.compiler_config import get_compiler_cfg
 import utils.logger_config as logger_config
-from utils.processes_utils import setup_subprocess_logging, ProcessDialog, EndNotifyDialog
+from utils.key_translator import qt_to_pynput
+from utils.processes_utils import setup_subprocess_logging, ProcessDialog, EndNotifyDialog, start_key_quitter
 
 
 
@@ -27,7 +28,7 @@ Press {keyname} to pause/resume execution.
 
 @dataclass
 class RunParams:
-    """Stores all the run parameters to pass to the "run" process"""
+    """Stores all the runtime parameters to pass to the "run" process"""
     text: str
     safemode: bool
     pause_key: Qt.Key
@@ -44,6 +45,7 @@ def _run_program_from_text(params: RunParams):
     setup_subprocess_logging(params.log_queue)
 
     key_name = QKeySequence(params.pause_key).toString().upper()
+    key_pause_pynput = qt_to_pynput(params.pause_key)   # we need conversion to be made because we store the key in qt format
 
     class ScriptRunnerDialog(ProcessDialog):
         worker: ExecutionThread
@@ -55,24 +57,39 @@ def _run_program_from_text(params: RunParams):
             self.pause_button.clicked.connect(self.worker.executor.pause)
             self.play_button.clicked.connect(self.worker.executor.resume)
             self.worker.executor.set_pause_callback(self._on_pause_instruction)
+            self.listener = self._start_pause_listener()
         
         def _on_pause_instruction(self):
             # if pause is requested from instruction, click pause button to update UI (does not affect execution state)
             if self.pause_button.isVisible():   # only clicks when visible to avoid infinite loop
-                self.pause_button.click() # emulates click (note that at this point execution is already paused by internal call to pause)  
+                self.pause_button.click() # emulates click (note that at this point execution is already paused by internal call to pause)   
+        
+        def _start_pause_listener(self):
+            """Starts a keyboard listener that pauses/resumes execution on SPACE key press."""
+            def on_press(key):
+                print(key, key_pause_pynput)
+                if key == key_pause_pynput:
+                    if not self.paused:
+                        self.pause_button.click()
+                    else:
+                        self.play_button.click()
+
+            listener = keyboard.Listener(on_press=on_press)
+            listener.start()
+            return listener
 
         def _change_text_to_compilation_failed(self):
             self.label.setText("Script compilation failed. Check terminal for error messages.")
             self.stop_button.setText("Close")
             self.pause_button.hide()
 
-        def keyPressEvent(self, a0: QKeyEvent | None) -> None:
-            super().keyPressEvent(a0)
-            if a0 and (a0.key() == params.pause_key):
-                if not self.paused:
-                    self.pause_button.click()
-                else:
-                    self.play_button.click()
+        #def keyPressEvent(self, a0: QKeyEvent | None) -> None:
+        #    super().keyPressEvent(a0)
+        #    if a0 and (a0.key() == params.pause_key):
+        #        if not self.paused:
+        #            self.pause_button.click()
+        #        else:
+        #            self.play_button.click()
 
         def show_popup_dialog(self, 
                 text: str,
@@ -115,17 +132,19 @@ def _run_program_from_text(params: RunParams):
             time.sleep(.5)   # waits for all logs to arrive
             self.finished.emit()
 
+    #start_key_quitter()
 
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
     dlg = ScriptRunnerDialog()
-    dlg.exec()
+    result = dlg.exec()
 
-    if params.notify_end:
+    # result > 0 makes sure script ended nominally, and was not halted
+    if params.notify_end and result > 0:
         QtWidgets.QApplication.beep()
         enddlg = EndNotifyDialog()
         enddlg.exec()
-        
+
     sys.exit(0)
 
 # ---------------------------
@@ -169,7 +188,8 @@ if __name__ == "__main__":
     params = RunParams(
         text,
         False,
-        Qt.Key.Key_Space
+        Qt.Key.Key_Space,
+        True
     )
 
     proc = begin_compile_and_execute_process(params)

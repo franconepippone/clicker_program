@@ -5,7 +5,7 @@ Main entrypoint of the application. Launches the editor when ran.
 import sys
 from view.gui_3 import QApplication, ScriptEditorApp
 from PyQt6.QtWidgets import QApplication
-import view.settings
+import view.settings    # just to preload settings
 import multiprocessing
 
 def set_global_font_size(app: QApplication, size: int):
