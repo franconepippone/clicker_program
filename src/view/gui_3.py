@@ -18,6 +18,7 @@ from .gui_utils import make_icon, make_eye_icon, ScriptHighlighter, CodeEditor, 
 from .settings_dialog import SettingsDialog
 from .settings import Settings
 from utils.resource_resolver import resource_path
+from utils.version import get_pyproject_version_str
 
 # ----------------------
 # Logging setup
@@ -276,6 +277,8 @@ class ScriptEditorApp(QWidget):
         self.coord_label = QLabel("X:0, Y:0")
         bottom_layout.addWidget(self.coord_label)
         bottom_layout.addStretch()
+        self.version_label = QLabel(get_pyproject_version_str())
+        bottom_layout.addWidget(self.version_label)
 
         # ---------------- Assemble ----------------
         main_layout.addLayout(exec_toolbar)
