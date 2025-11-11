@@ -25,7 +25,7 @@ For a detailed reference of all scripting commands, see the [Command Reference](
 ## Installation
 
 **Requirements:**  
- - Python **3.8+**  
+ - Python **3.13+**  
  - **pip** (Python package manager)
 
 ### 1. Clone the Repository

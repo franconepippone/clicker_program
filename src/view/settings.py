@@ -22,7 +22,7 @@ class Settings:
     text_size: int = 10
     dark_mode: bool = False     # STILL DOES NOT DO ANYHTING
     notify_when_program_ends: bool = False
-    pause_resume_key: int = DEFAULT_KEY
+    pause_resume_key: int | str = DEFAULT_KEY
 
     # --- File I/O ---
 

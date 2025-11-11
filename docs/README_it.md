@@ -23,7 +23,7 @@ Per un elenco completo e dettagliato dei comandi del linguaggio di scripting, co
 ## Installazione
 
 **Prerequisiti:**  
- - Python **3.8+**  
+ - Python **3.13+**  
  - **pip** (gestore pacchetti Python)
 
 ### 1. Clonare il repository

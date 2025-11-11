@@ -20,7 +20,6 @@ from utils.processes_utils import setup_subprocess_logging, ProcessDialog, EndNo
 from view.gui_utils import make_icon
 
 
-
 # text shown in the process dialog
 DIALOG_TEXT = lambda keyname: f"""
 Runnig script, press ESC to terminate.

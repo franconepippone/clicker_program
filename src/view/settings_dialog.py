@@ -10,6 +10,7 @@ from PyQt6.QtGui import QKeyEvent, QKeySequence
 import logging
 
 from .settings import Settings
+from utils.allowed_keys import ALLOWED_KEYS_QT
 
 
 logger_editor = logging.getLogger("Editor")
@@ -121,8 +122,9 @@ class SettingsDialog(QDialog):
             def keyPressEvent(self, a0: QKeyEvent | None) -> None:
                 # Capture the key name (add key filtering eventually)
                 if a0 is not None:
-                    self.captured_key = a0.key()
-                    self.accept()
+                    if a0.key() in ALLOWED_KEYS_QT: # key filtering
+                        self.captured_key = a0.key()
+                        self.accept()
 
         # Show key capture dialog
         dlg = KeyCaptureDialog(self)
