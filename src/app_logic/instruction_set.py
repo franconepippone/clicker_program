@@ -5,6 +5,7 @@ import time
 from enum import Enum
 import logging
 import re
+import time
 
 import pyautogui as gui
 from pynput import keyboard
@@ -12,8 +13,7 @@ from pynput import keyboard
 from app_logic.virtual_machine.executor import Executor, Instruction, HaltExecution
 
 
-WARN_STACK_SIZE = 500
-MAX_STACK_SIZE = 1000
+MAX_STACK_SIZE = 4096   # pc stack used for call / return
 
 ##### Utility classes
 
@@ -150,16 +150,9 @@ def _offset_point(shared: SharedRuntimeDict, point: Tuple[int, int]) -> Tuple[in
 def _push_pc(shared: SharedRuntimeDict, pc: int):
     stack = shared["pc_stack"]
     stack.append(pc)
-    return
 
-    if len(stack) == WARN_STACK_SIZE:
-        shared["logger"].warning("PC stack is approaching overflow, is the program stuck in a recursive loop?")
-        import time
-        time.sleep(.5)
-    elif len(stack) >= MAX_STACK_SIZE:
-        import time
-        time.sleep(3)
-        #raise RuntimeError("Stack overflow, too many unreturned function calls")   
+    if len(stack) >= MAX_STACK_SIZE:
+        raise RuntimeError("Maximum recursion depth reached.")
 
 def _pop_pc(shared: SharedRuntimeDict) -> int | None:
     if len(shared["pc_stack"]) > 0:
