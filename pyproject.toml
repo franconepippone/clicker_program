@@ -1,11 +1,10 @@
 [project]
 name = "clicker-program"
-version = "1.0.2"
-description = "Lightweight app for recording, scripting, and replaying mouse click sequences to automate repetitive GUI tasks; supports adjustable timing, playback options, and scriptable action sequences."
+version = "1.0.3"
+description = "Lightweight app for recording, scripting, and replaying mouse click sequences to automate repetitive GUI tasks"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "bottle>=0.13.4",
     "keyboard>=0.13.5",
     "pip>=25.3",
     "plyer>=2.1.0",
