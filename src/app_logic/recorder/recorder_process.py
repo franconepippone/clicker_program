@@ -12,7 +12,7 @@ from app_logic.recorder.recorder import Recorder
 from app_logic.decompiler.decompiler import Decompiler
 import utils.logger_config as logger_config
 
-from utils.processes_utils import setup_subprocess_logging, ProcessDialog
+from utils.processes_utils import setup_subprocess_logging, ProcessDialog, start_key_quitter
 from view.gui_utils import make_icon
 
 def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_queue: Optional[multiprocessing.Queue] = None):
@@ -52,7 +52,7 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
 
             self.finished.emit()
     
-    #listener = start_key_quitter()
+    start_key_quitter() # we need this because ESC only closes window if the window is focused
     
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
@@ -61,7 +61,6 @@ def _start_recording(log_queue: Optional[multiprocessing.Queue] = None, result_q
     dlg.show()
     app.exec()
     
-    #listener.stop()
     
 
 # ---------------------------

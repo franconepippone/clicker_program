@@ -133,7 +133,7 @@ def _run_program_from_text(params: RunParams):
             time.sleep(.5)   # waits for all logs to arrive
             self.finished.emit()
 
-    #start_key_quitter()
+    start_key_quitter() # we need this because ESC only closes window if the window is focused
 
     # --- Run Qt event loop in main thread ---
     app = QtWidgets.QApplication(sys.argv)
@@ -141,7 +141,7 @@ def _run_program_from_text(params: RunParams):
     dlg = ScriptRunnerDialog()
     result = dlg.exec()
 
-    # result > 0 makes sure script ended nominally, and was not halted
+    # result > 0 makes sure script ended nominally, script ended by itself (either finished or crashed)
     if params.notify_end and result > 0:
         QtWidgets.QApplication.beep()
         enddlg = EndNotifyDialog()
