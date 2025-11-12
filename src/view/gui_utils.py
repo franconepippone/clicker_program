@@ -64,6 +64,10 @@ KEYWORDS_PURPLE = [
     "var", "printvar"
 ]
 
+KEYWORDS_GREEN = [
+    "$MOUSE_X", "$MOUSE_Y", "$OFFSET_X", "$OFFSET_Y"
+]
+
 class ScriptHighlighter(QSyntaxHighlighter):
     def __init__(self, document) -> None:
         super().__init__(document)
@@ -73,6 +77,7 @@ class ScriptHighlighter(QSyntaxHighlighter):
             "blue": self._make_format("#005cc5", bold=True),
             "purple": self._make_format("#6f42c1", bold=True),
             "orange": self._make_format("#d73a49", bold=True),
+            "green" : self._make_format("#00b554", bold=True)
         }
 
         # Build keyword lists with their colors
@@ -80,6 +85,7 @@ class ScriptHighlighter(QSyntaxHighlighter):
             (KEYWORDS_BLUE, self.keyword_formats["blue"]),
             (KEYWORDS_PURPLE, self.keyword_formats["purple"]),
             (KEYWORDS_ORANGE, self.keyword_formats["orange"]),
+            (KEYWORDS_GREEN, self.keyword_formats["green"])
         ]
 
         # Comment style
@@ -99,13 +105,15 @@ class ScriptHighlighter(QSyntaxHighlighter):
         if not text:
             return
 
-        # Highlight keywords (case-insensitive)
+        # Highlight keywords (case-sensitive, support $ prefix)
         for keywords, fmt in self.keyword_groups:
             for word in keywords:
-                pattern = r'\b{}\b'.format(re.escape(word))
-                for match in re.finditer(pattern, text, re.IGNORECASE):
+                # Allow words that may start with '$'
+                pattern = r'(?<![\w$]){}(?![\w$])'.format(re.escape(word))
+                for match in re.finditer(pattern, text):
                     start, end = match.span()
                     self.setFormat(start, end - start, fmt)
+
 
         # Highlight comments starting with ';'
         comment_index = text.find(";")
