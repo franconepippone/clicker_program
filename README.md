@@ -25,6 +25,10 @@ For a detailed reference of all scripting commands, see the [Command Reference](
 
 ## Installation
 
+For Windows, download the latest release executable from the releases list and run it.
+
+## Install from Source
+
 **Requirements:**  
  - Python **3.13+**  
  - **pip** (Python package manager)
