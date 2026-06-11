@@ -3,7 +3,10 @@
 *An Italian version of this document is avaliable [here](docs/README_it.md).*
 
 A software (mouse emulator-automation tool) for automating mouse tasks via a custom scripting language, entirely
-contained within a minimal GUI IDE.  
+contained within a minimal GUI IDE.
+
+<img width="666" height="578" alt="image" src="https://github.com/user-attachments/assets/7b16aabb-5e64-4887-9b6e-acca69773247" />
+
 
 
 ---
