@@ -129,7 +129,7 @@ See *example_programs/variables.txt* for practical usage examples.
   Treats the current mouse position as the coordinate origin (0,0) from now on.  
   Example: `setoffset`
 
-- **clearoffset**
+- **clearoffset**    
   Resets offset applied by `setoffset`, bringing the coordinate origin back to the top-left corner of the screen.
   Example: `clearoffset`
 
