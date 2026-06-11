@@ -75,7 +75,7 @@ Example:
 
 - **end**
   Terminates script execution.
-  Esempio: `end`
+  Example: `end`
 ---
 
 ## 🧮 Variables
@@ -125,6 +125,13 @@ See *example_programs/variables.txt* for practical usage examples.
 ---
 
 ## 🧰 Utility Commands
+- **setoffset**  
+  Treats the current mouse position as the coordinate origin (0,0) from now on.  
+  Example: `setoffset`
+
+- **clearoffset**
+  Resets offset applied by `setoffset`, bringing the coordinate origin back to the top-left corner of the screen.
+  Example: `clearoffset`
 
 - **centermouse**  
   Moves the cursor to the center of the screen.  
