@@ -130,7 +130,7 @@ See *example_programs/variables.txt* for practical usage examples.
   Example: `setoffset`
 
 - **clearoffset**    
-  Resets offset applied by `setoffset`, bringing the coordinate origin back to the top-left corner of the screen.
+  Resets offset applied by `setoffset`, bringing the coordinate origin back to the top-left corner of the screen.    
   Example: `clearoffset`
 
 - **centermouse**  
